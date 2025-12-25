@@ -26,22 +26,22 @@ Criar a solução .NET 8 com todos os projetos das camadas (Domain, Application,
 
 ## Subtasks
 
-- [Subtask 01: Criar solução .NET e estrutura de diretórios](./subtask/Subtask-01-Criar_solucao_estrutura_diretorios.md)
-- [Subtask 02: Criar projetos Core (Domain, Application, Infra, Infra.Persistence, CrossCutting)](./subtask/Subtask-02-Criar_projetos_core.md)
-- [Subtask 03: Criar projetos InterfacesExternas (Api, Migrator)](./subtask/Subtask-03-Criar_projetos_interfaces_externas.md)
-- [Subtask 04: Criar projetos de testes (Tests.Unit, Tests.Bdd)](./subtask/Subtask-04-Criar_projetos_testes.md)
-- [Subtask 05: Configurar dependências entre projetos](./subtask/Subtask-05-Configurar_dependencias_projetos.md)
-- [Subtask 06: Criar estrutura básica de pastas em cada projeto](./subtask/Subtask-06-Criar_estrutura_pastas_projetos.md)
-- [Subtask 07: Implementar rota "Olá Mundo" na API](./subtask/Subtask-07-Implementar_rota_ola_mundo_api.md)
-- [Subtask 08: Configurar Program.cs da API com Swagger](./subtask/Subtask-08-Configurar_Program_Swagger.md)
-- [Subtask 09: Validar compilação e estrutura completa](./subtask/Subtask-09-Validar_compilacao_estrutura.md)
+- [x] [Subtask 01: Criar solução .NET e estrutura de diretórios](./subtask/Subtask-01-Criar_solucao_estrutura_diretorios.md)
+- [x] [Subtask 02: Criar projetos Core (Domain, Application, Infra, Infra.Persistence, CrossCutting)](./subtask/Subtask-02-Criar_projetos_core.md)
+- [x] [Subtask 03: Criar projetos InterfacesExternas (Api, Migrator)](./subtask/Subtask-03-Criar_projetos_interfaces_externas.md)
+- [x] [Subtask 04: Criar projetos de testes (Tests.Unit, Tests.Bdd)](./subtask/Subtask-04-Criar_projetos_testes.md)
+- [x] [Subtask 05: Configurar dependências entre projetos](./subtask/Subtask-05-Configurar_dependencias_projetos.md)
+- [x] [Subtask 06: Criar estrutura básica de pastas em cada projeto](./subtask/Subtask-06-Criar_estrutura_pastas_projetos.md)
+- [x] [Subtask 07: Implementar rota "Olá Mundo" na API](./subtask/Subtask-07-Implementar_rota_ola_mundo_api.md)
+- [x] [Subtask 08: Configurar Program.cs da API com Swagger](./subtask/Subtask-08-Configurar_Program_Swagger.md)
+- [x] [Subtask 09: Validar compilação e estrutura completa](./subtask/Subtask-09-Validar_compilacao_estrutura.md)
 
 ## Critérios de Aceite da História
 
-- [ ] Solução `.sln` criada na raiz do projeto
-- [ ] Todos os 9 projetos criados nas pastas corretas (`src/Core/`, `src/InterfacesExternas/`, `src/tests/`)
-- [ ] Todos os projetos adicionados à solução
-- [ ] Dependências entre projetos configuradas corretamente:
+- [x] Solução `.sln` criada na raiz do projeto
+- [x] Todos os 9 projetos criados nas pastas corretas (`src/Core/`, `src/InterfacesExternas/`, `src/tests/`)
+- [x] Todos os projetos adicionados à solução
+- [x] Dependências entre projetos configuradas corretamente:
   - Application → Domain
   - Infra → Application, Domain
   - Infra.Persistence → Domain, Application
@@ -50,14 +50,14 @@ Criar a solução .NET 8 com todos os projetos das camadas (Domain, Application,
   - Migrator → Infra.Persistence, CrossCutting
   - Tests.Unit → Todos os projetos Core
   - Tests.Bdd → Todos os projetos Core
-- [ ] Estrutura de pastas criada em cada projeto conforme `kitchenflow-context.mdc`
-- [ ] API configurada com ASP.NET Core e Swagger
-- [ ] Rota GET `/api/health` ou `/api/hello` retornando "Olá Mundo" funcionando
-- [ ] Swagger acessível e mostrando a rota criada
-- [ ] Todos os projetos compilam sem erros
-- [ ] `dotnet build` executa com sucesso na solução completa
-- [ ] `dotnet run` na API inicia sem erros e expõe a rota
-- [ ] Estrutura segue padrão do projeto de referência `fiap-fase4-auth-lambda`
-- [ ] Nomenclatura de projetos segue padrão `FastFood.KitchenFlow.{Camada}`
-- [ ] Namespaces seguem padrão dos nomes dos projetos
+- [x] Estrutura de pastas criada em cada projeto conforme `kitchenflow-context.mdc`
+- [x] API configurada com ASP.NET Core e Swagger
+- [x] Rota GET `/api/health` ou `/api/hello` retornando "Olá Mundo" funcionando
+- [x] Swagger acessível e mostrando a rota criada
+- [x] Todos os projetos compilam sem erros
+- [x] `dotnet build` executa com sucesso na solução completa
+- [x] `dotnet run` na API inicia sem erros e expõe a rota
+- [x] Estrutura segue padrão do projeto de referência `fiap-fase4-auth-lambda`
+- [x] Nomenclatura de projetos segue padrão `FastFood.KitchenFlow.{Camada}`
+- [x] Namespaces seguem padrão dos nomes dos projetos
 
