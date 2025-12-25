@@ -1,0 +1,487 @@
+---
+alwaysApply: true
+---
+
+Você está trabalhando no microserviço **FastFoodKitchenFlow**, parte do ecossistema FastFood para trabalho acadêmico (Fase 4).
+
+=====================
+CONTEXTO DO PROJETO
+=====================
+
+Este é um microserviço de **Saga Coreografada** que faz parte de uma solução maior de fast food com múltiplos microserviços.
+
+**Tecnologias e Versões:**
+- .NET 8 (todas as APIs)
+- AWS Academy (ambiente de desenvolvimento)
+- PostgreSQL (banco de dados exclusivo deste serviço via RDS)
+- AWS SQS (integração assíncrona com outros microserviços)
+
+**Autenticação AWS:**
+- **SEMPRE usar Access Key e Secret Key** para todos os acessos AWS
+- Não usar credenciais IAM roles ou outros métodos
+- Configurar credenciais via variáveis de ambiente ou AWS CLI
+
+=====================
+RESPONSABILIDADES DO KITCHENFLOW
+=====================
+
+Este microserviço é responsável por gerenciar o fluxo da cozinha após o pagamento ter sido realizado:
+
+**Funcionalidades Principais:**
+1. **Recebimento de Pedidos Pagos:**
+   - Consumir mensagens SQS do PayStream com resultado de pagamento
+   - Validar que o pagamento foi aprovado antes de iniciar preparação
+   - Criar registro do pedido na fila de produção da cozinha
+   - Persistir status inicial: "Recebido"
+
+2. **Gerenciamento de Fila de Produção:**
+   - Priorização de produtos/pedidos conforme regras de negócio
+   - Atualização de status do pedido durante o processo:
+     - **Recebido**: Pedido recebido após pagamento aprovado
+     - **Em Preparação**: Pedido em processo de preparação na cozinha
+     - **Pronto**: Pedido finalizado e pronto para entrega
+     - **Finalizado**: Pedido entregue ao cliente (fechando o ciclo)
+
+3. **Consulta e Monitoramento:**
+   - Listagem de pedidos em preparação
+   - Consulta de pedido por ID
+   - Consulta de status atual do pedido
+   - Histórico de status do pedido
+
+4. **Integração com Saga:**
+   - Após finalizar o pedido (status "Finalizado")
+   - Pode publicar atualizações de status para OrderHub (opcional)
+   - Encerra o ciclo de preparação na saga coreografada
+
+=====================
+REGRAS DE CONTEXTO DE PAGAMENTO
+=====================
+
+**Fluxo de Recebimento de Pagamento:**
+- O KitchenFlow **NÃO inicia a preparação** até receber confirmação de pagamento aprovado
+- O PayStream publica mensagens na fila SQS quando o pagamento é processado
+- Mensagens podem ter dois resultados:
+  - **Pagamento Aprovado**: Inicia o fluxo de preparação
+  - **Pagamento Rejeitado**: Pedido não deve entrar na fila de produção
+
+**Estrutura da Mensagem de Pagamento (SQS):**
+A mensagem recebida do PayStream deve conter:
+```json
+{
+  "orderId": "string",
+  "paymentId": "string",
+  "paymentStatus": "Approved" | "Rejected" | "Pending",
+  "paymentAmount": "decimal",
+  "paymentDate": "datetime",
+  "customerId": "string",
+  "items": [
+    {
+      "productId": "string",
+      "quantity": "int",
+      "price": "decimal"
+    }
+  ]
+}
+```
+
+**Validações de Pagamento:**
+- **SEMPRE validar** que `paymentStatus == "Approved"` antes de criar pedido na fila
+- Se `paymentStatus == "Rejected"`, registrar log e não processar o pedido
+- Se `paymentStatus == "Pending"`, aguardar nova mensagem ou implementar retry
+- Validar que `paymentAmount` corresponde ao valor esperado do pedido
+- Validar que `orderId` existe e é válido
+- Validar que todos os `items` estão presentes e válidos
+
+**Idempotência:**
+- Verificar se o pedido já foi processado antes de criar novo registro
+- Usar `paymentId` ou combinação `orderId + paymentId` para evitar duplicação
+- Implementar mecanismo de deduplicação baseado em mensagens SQS
+
+**Tratamento de Erros de Pagamento:**
+- Se pagamento rejeitado: registrar evento, não criar pedido na cozinha
+- Se dados de pagamento inválidos: enviar mensagem para Dead Letter Queue (DLQ)
+- Se pagamento duplicado: ignorar mensagem e registrar log
+- Implementar retry para falhas temporárias de processamento
+
+**Integração com PayStream:**
+- Consumir fila SQS configurada pelo PayStream
+- Configurar Long Polling para melhor eficiência
+- Implementar processamento em lote quando possível
+- Configurar Visibility Timeout adequado para processamento
+- Implementar Dead Letter Queue para mensagens com falha recorrente
+
+**Rastreabilidade:**
+- Registrar timestamp de recebimento da mensagem de pagamento
+- Manter histórico de status do pedido vinculado ao pagamento
+- Logs devem incluir `paymentId` e `orderId` para rastreamento
+- Manter auditoria de quando o pedido foi recebido após pagamento
+
+=====================
+BANCO DE DADOS - POSTGRESQL
+=====================
+
+**Banco Exclusivo:**
+- Este microserviço possui um banco PostgreSQL (RDS) exclusivo
+- Não compartilha dados diretamente com outros microserviços
+- Comunicação entre serviços é feita via mensagens assíncronas (SQS)
+
+**Tabelas Principais:**
+1. **KitchenOrders (Pedidos da Cozinha)**
+   - Armazena pedidos recebidos após pagamento aprovado
+   - Campos principais:
+     - `Id` (PK)
+     - `OrderId` (ID do pedido original)
+     - `PaymentId` (ID do pagamento aprovado)
+     - `CustomerId`
+     - `Status` (Recebido, Em Preparação, Pronto, Finalizado)
+     - `PaymentAmount`
+     - `ReceivedAt` (timestamp de recebimento)
+     - `StartedAt` (quando iniciou preparação)
+     - `ReadyAt` (quando ficou pronto)
+     - `FinishedAt` (quando foi finalizado)
+     - `Priority` (para priorização)
+     - `CreatedAt`, `UpdatedAt`
+
+2. **KitchenOrderItems (Itens do Pedido)**
+   - Itens de cada pedido da cozinha
+   - Campos principais:
+     - `Id` (PK)
+     - `KitchenOrderId` (FK)
+     - `ProductId`
+     - `ProductName`
+     - `Quantity`
+     - `UnitPrice`
+     - `Notes` (observações especiais)
+
+3. **KitchenOrderStatusHistory (Histórico de Status)**
+   - Auditoria de mudanças de status
+   - Campos principais:
+     - `Id` (PK)
+     - `KitchenOrderId` (FK)
+     - `PreviousStatus`
+     - `NewStatus`
+     - `ChangedAt`
+     - `ChangedBy` (sistema ou usuário)
+
+**Observações:**
+- Usar Entity Framework Core para acesso ao banco
+- Criar migrations para todas as alterações de schema
+- Implementar índices apropriados (OrderId, PaymentId, Status, Priority)
+- Considerar particionamento por data se volume for alto
+- Manter histórico completo de mudanças de status
+
+=====================
+ARQUITETURA E PADRÕES
+=====================
+
+**Saga Coreografada:**
+- Este serviço participa de uma saga coreografada
+- Cada microserviço é responsável por seu próprio passo
+- Comunicação via eventos/mensagens (SQS)
+- Não há orquestrador central
+
+**Fluxo de Integração:**
+```
+Cliente → OrderHub (cria pedido) 
+       → OrderHub (processa pedido)
+       → SQS (envia mensagem para PayStream)
+       → PayStream (processa pagamento)
+       → SQS (envia resultado de pagamento para KitchenFlow)
+       → KitchenFlow (recebe pagamento aprovado)
+       → KitchenFlow (inicia preparação)
+       → KitchenFlow (atualiza status: Recebido → Em Preparação → Pronto → Finalizado)
+       → [saga continua...]
+```
+
+**Padrão de Código:**
+- Seguir arquitetura Clean Architecture conforme definido em `baseprojectcontext.mdc`
+- Usar padrão Gateway para abstrair acesso ao PostgreSQL e SQS
+- UseCases orquestram o fluxo de negócio
+- API expõe endpoints HTTP RESTful
+- Background Service para consumir mensagens SQS de pagamento
+
+=====================
+ESTRUTURA DE PASTAS E ARQUITETURA
+=====================
+
+**Referência de Arquitetura:**
+- Este projeto deve seguir a mesma estrutura de pastas e organização do projeto de referência: `C:\Projetos\Fiap\fiap-fase4-auth-lambda`
+- A estrutura foi validada e aplicada com sucesso no projeto Auth Lambda
+- Adaptar conforme necessário para o contexto de API HTTP em EKS
+
+**Estrutura de Diretórios:**
+
+```
+fiap-fase4-kitchenflow-api/
+├── src/
+│   ├── Core/
+│   │   ├── FastFood.KitchenFlow.Domain/
+│   │   │   ├── Entities/          # Entidades de domínio (KitchenOrder, KitchenOrderItem, etc.)
+│   │   │   ├── Common/             # Exceções, Value Objects, Enums (OrderStatus, etc.)
+│   │   │   └── FastFood.KitchenFlow.Domain.csproj
+│   │   │
+│   │   ├── FastFood.KitchenFlow.Application/
+│   │   │   ├── Commands/           # Commands para operações (StartPreparationCommand, FinishOrderCommand, etc.)
+│   │   │   ├── UseCases/           # Casos de uso (ProcessPaymentApprovedUseCase, UpdateOrderStatusUseCase, etc.)
+│   │   │   ├── InputModels/        # Modelos de entrada dos UseCases
+│   │   │   ├── OutputModels/       # Modelos de saída dos UseCases
+│   │   │   ├── Responses/          # ResponseModels (Application Responses)
+│   │   │   ├── Presenters/        # Presenters para transformação de Responses
+│   │   │   ├── Ports/             # Interfaces de Gateways (IKitchenOrderGateway, ISqsGateway, IPaymentGateway)
+│   │   │   └── FastFood.KitchenFlow.Application.csproj
+│   │   │
+│   │   ├── FastFood.KitchenFlow.Infra/
+│   │   │   ├── Services/          # Implementações de serviços externos (SQS Consumer, etc.)
+│   │   │   ├── BackgroundServices/ # Background Services para consumir SQS
+│   │   │   └── FastFood.KitchenFlow.Infra.csproj
+│   │   │
+│   │   ├── FastFood.KitchenFlow.Infra.Persistence/
+│   │   │   ├── Repositories/      # Implementações de repositórios PostgreSQL
+│   │   │   ├── Entities/          # Entidades de persistência (se necessário)
+│   │   │   ├── Configurations/    # Configurações EF Core (Fluent API)
+│   │   │   ├── DbContext/         # KitchenFlowDbContext
+│   │   │   ├── Migrations/        # Migrations do EF Core
+│   │   │   └── FastFood.KitchenFlow.Infra.Persistence.csproj
+│   │   │
+│   │   └── FastFood.KitchenFlow.CrossCutting/
+│   │       ├── Extensions/         # Extensões (ServiceCollectionExtensions, etc.)
+│   │       └── FastFood.KitchenFlow.CrossCutting.csproj
+│   │
+│   ├── InterfacesExternas/
+│   │   ├── FastFood.KitchenFlow.Api/  # API HTTP ASP.NET Core (para EKS)
+│   │   │   ├── Controllers/        # Controllers HTTP
+│   │   │   ├── Program.cs
+│   │   │   ├── appsettings.json
+│   │   │   └── FastFood.KitchenFlow.Api.csproj
+│   │   │
+│   │   └── FastFood.KitchenFlow.Migrator/  # Job de manutenção PostgreSQL (K8s Job)
+│   │       ├── Program.cs
+│   │       └── FastFood.KitchenFlow.Migrator.csproj
+│   │
+│   └── tests/
+│       ├── FastFood.KitchenFlow.Tests.Unit/  # Testes unitários
+│       └── FastFood.KitchenFlow.Tests.Bdd/   # Testes BDD (SpecFlow)
+│
+├── rules/                            # Regras e contexto do projeto
+├── docs/                             # Documentação
+├── .github/
+│   └── workflows/                    # GitHub Actions
+└── FastFood.KitchenFlow.sln         # Solução .NET
+```
+
+**Organização da Solução (.sln):**
+- Projetos Core dentro de `Core`
+- Projetos de API/Migrator dentro de `InterfacesExternas`
+- Projetos de testes dentro de `Tests`
+- **SEMPRE adicionar novos projetos ao arquivo de solução após criá-los**
+
+**Nomenclatura de Projetos:**
+- Padrão: `FastFood.KitchenFlow.{Camada}`
+- Exemplos:
+  - `FastFood.KitchenFlow.Domain`
+  - `FastFood.KitchenFlow.Application`
+  - `FastFood.KitchenFlow.Infra`
+  - `FastFood.KitchenFlow.Infra.Persistence`
+  - `FastFood.KitchenFlow.CrossCutting`
+  - `FastFood.KitchenFlow.Api`
+  - `FastFood.KitchenFlow.Migrator`
+  - `FastFood.KitchenFlow.Tests.Unit`
+  - `FastFood.KitchenFlow.Tests.Bdd`
+
+**Namespaces:**
+- Seguir o mesmo padrão dos nomes dos projetos
+- Exemplo: `FastFood.KitchenFlow.Domain.Entities`, `FastFood.KitchenFlow.Application.UseCases`, etc.
+
+**Diferenças em relação ao projeto Auth Lambda:**
+- API será ASP.NET Core HTTP (não Lambda)
+- Banco de dados será PostgreSQL (mesmo tipo, mas schema diferente)
+- Terá projeto Migrator para manutenção de tabelas PostgreSQL (K8s Job)
+- Terá Background Service para consumir mensagens SQS de pagamento
+- Não terá múltiplas Lambdas, apenas uma API HTTP
+
+=====================
+REGRAS ESPECÍFICAS DO KITCHENFLOW
+=====================
+
+**Processamento de Pagamento Aprovado:**
+- Validar que paymentStatus == "Approved"
+- Verificar idempotência (não processar pedido duplicado)
+- Criar registro na tabela KitchenOrders com status "Recebido"
+- Criar registros em KitchenOrderItems para cada item
+- Registrar histórico de status inicial
+- Calcular prioridade do pedido (se aplicável)
+- Registrar timestamp de recebimento
+
+**Priorização de Pedidos:**
+- Implementar lógica de priorização conforme regras de negócio
+- Considerar fatores como:
+  - Tipo de produto (alguns podem ter prioridade)
+  - Tempo de espera
+  - Valor do pedido
+  - Tipo de cliente (se aplicável)
+- Atualizar campo Priority na tabela KitchenOrders
+- Ordenar fila de produção por prioridade
+
+**Atualização de Status:**
+- Validar transições de status permitidas:
+  - Recebido → Em Preparação
+  - Em Preparação → Pronto
+  - Pronto → Finalizado
+- Não permitir transições inválidas (ex: Recebido → Finalizado)
+- Registrar cada mudança de status no histórico
+- Atualizar timestamps apropriados (StartedAt, ReadyAt, FinishedAt)
+- Validar que pedido existe antes de atualizar
+
+**Consulta de Pedidos:**
+- Listar pedidos por status
+- Filtrar por período (data de recebimento)
+- Ordenar por prioridade e data
+- Implementar paginação para listagens
+- Retornar informações completas incluindo itens
+
+**Consumo de Mensagens SQS:**
+- Implementar Background Service para consumir fila SQS
+- Processar mensagens de forma assíncrona
+- Implementar retry para falhas temporárias
+- Enviar mensagens com falha para DLQ após tentativas
+- Validar estrutura da mensagem antes de processar
+- Implementar logging detalhado de cada mensagem processada
+
+**Integração com OrderHub (Opcional):**
+- Se necessário, publicar atualizações de status para OrderHub
+- Usar fila SQS separada para notificações
+- Incluir orderId e novo status na mensagem
+- Implementar como operação opcional (não bloqueante)
+
+=====================
+CONFIGURAÇÃO AWS
+=====================
+
+**Credenciais:**
+- Configurar Access Key e Secret Key via:
+  - Variáveis de ambiente: `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY`
+  - Ou arquivo de credenciais AWS (`~/.aws/credentials`)
+  - Ou configuração no appsettings.json (apenas para desenvolvimento local)
+
+**Recursos AWS Utilizados:**
+- PostgreSQL (RDS): Banco de dados para pedidos da cozinha
+- SQS: Fila para receber mensagens de resultado de pagamento do PayStream
+- SQS (Opcional): Fila para enviar atualizações de status para OrderHub
+- EKS: Cluster Kubernetes para hospedar o deployment da API
+- ECR: Container Registry para armazenar imagens Docker
+- (Futuro) API Gateway: Para exposição da API (se necessário)
+
+**Configuração SQS:**
+- Fila de entrada: Configurada pelo PayStream para enviar resultados de pagamento
+- Nome da fila: Definido no projeto de infraestrutura
+- Dead Letter Queue: Configurar para mensagens com falha recorrente
+- Visibility Timeout: Configurar tempo adequado para processamento
+- Long Polling: Habilitar para melhor eficiência
+
+**Região:**
+- Usar a região configurada no AWS Academy
+- Verificar configuração de região nas credenciais
+
+=====================
+DEPLOY E INFRAESTRUTURA
+=====================
+
+**Ambiente de Execução:**
+- A API será executada em um **Deployment no cluster EKS**
+- A infraestrutura (EKS, ECR, RDS PostgreSQL, SQS, etc.) será criada em **outro projeto separado**
+- Este repositório contém apenas o código da aplicação e pipelines de CI/CD
+
+**GitHub Actions - CI/CD:**
+
+Este repositório terá **3 GitHub Actions principais**:
+
+1. **Push de Imagens para ECR:**
+   - Build da imagem Docker da aplicação
+   - Push da imagem para o Amazon ECR
+   - Executar após build, testes e análise Sonar bem-sucedidos
+   - Tag da imagem baseada em versão/tag do Git
+   - **Validação obrigatória:** Cobertura mínima de 85% e pelo menos 1 teste BDD
+
+2. **Deploy no EKS:**
+   - Deploy do deployment no cluster Kubernetes
+   - Atualizar a imagem do deployment com a nova versão
+   - Executar após push bem-sucedido para ECR
+   - Pode incluir health checks e rollback automático
+
+3. **Job de Manutenção de Banco de Dados (PostgreSQL):**
+   - Executar um **Kubernetes Job** para manutenção do PostgreSQL
+   - Responsável por:
+     - Executar migrations do Entity Framework Core
+     - Criar novas tabelas quando necessário
+     - Ajustes finos em tabelas existentes (índices, constraints, etc.)
+     - Atualizar schema do banco de dados
+   - Executar manualmente ou em eventos específicos (ex: criação de PR, merge na main)
+   - O job deve ser idempotente (pode ser executado múltiplas vezes sem problemas)
+   - Usar Entity Framework Core Migrations para todas as alterações
+
+**Observações sobre Deploy:**
+- As configurações do Kubernetes (Deployment, Service, ConfigMap, etc.) podem estar neste repositório ou no projeto de infraestrutura
+- Sempre validar que a imagem foi criada corretamente antes do deploy
+- O job de manutenção deve ter permissões adequadas para acessar o RDS PostgreSQL (via Access Key/Secret Key)
+- Configurar connection string do PostgreSQL via ConfigMap ou Secrets do Kubernetes
+- Background Service para SQS deve estar sempre rodando no deployment
+
+=====================
+MELHORES PRÁTICAS APLICADAS
+=====================
+
+- Clean Architecture com separação clara de responsabilidades
+- SOLID principles
+- Testes unitários e de integração
+- Tratamento de erros robusto
+- Logging estruturado
+- Validações de entrada
+- Idempotência nas operações críticas (processamento de pagamento)
+- Versionamento de API (quando necessário)
+- Background Services para processamento assíncrono
+- Entity Framework Core para acesso a dados
+- Migrations versionadas para controle de schema
+
+=====================
+CRITÉRIOS DE ACEITE - TESTES
+=====================
+
+**Cobertura de Testes (SonarQube/SonarCloud):**
+- **Mínimo obrigatório: 85% de cobertura de código**
+- A análise de cobertura deve ser executada via SonarQube/SonarCloud
+- O Quality Gate do Sonar deve bloquear merges que não atendam este critério
+- Cobertura deve ser medida em todas as camadas (Domain, UseCases, Gateways, API)
+
+**Teste BDD (Behavior Driven Development):**
+- **Mínimo obrigatório: 1 teste BDD** (mesmo que simples)
+- Deve validar pelo menos um fluxo crítico do sistema
+- Exemplo sugerido: "PayStream aprova pagamento → KitchenFlow recebe mensagem SQS → pedido é criado na fila com status Recebido → status é atualizado para Em Preparação → Pronto → Finalizado"
+- Pode usar frameworks como SpecFlow, Gherkin, ou similar
+- O teste BDD deve ser executável e fazer parte da suíte de testes do projeto
+
+**Validação no CI/CD:**
+- Os critérios de aceite devem ser validados nas GitHub Actions
+- Build deve falhar se cobertura estiver abaixo de 85%
+- Build deve falhar se não houver pelo menos 1 teste BDD implementado
+- Sonar Quality Gate deve ser obrigatório para merge na branch principal
+
+**Observações:**
+- Estes são critérios de aceite obrigatórios do projeto
+- Não é permitido fazer merge sem atender ambos os critérios
+- Testes BDD podem ser simples, mas devem validar comportamento real do sistema
+- Cobertura de 85% é o mínimo, mas buscar sempre o máximo possível
+
+=====================
+NOTAS IMPORTANTES
+=====================
+
+- Este é um projeto acadêmico, mas deve seguir padrões profissionais
+- Código deve ser limpo, testável e manutenível
+- Documentação inline quando necessário
+- Commits descritivos e organizados
+- Sempre considerar escalabilidade e performance do PostgreSQL
+- Monitorar custos do AWS Academy (recursos limitados)
+- Background Service para SQS deve ser resiliente a falhas
+- Implementar circuit breaker para chamadas externas se necessário
+- Manter histórico completo de mudanças de status para auditoria
+- Validar sempre pagamento antes de iniciar preparação (regra crítica de negócio)
