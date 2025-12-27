@@ -1,0 +1,206 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag da imagem para deploy (padrão: SHA do commit)'
+        required: false
+        default: ''
+      skip_migrator:
+        description: 'Pular execução do Migrator'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: eks-paystream
+  KUBERNETES_NAMESPACE: kitchenflow
+  DEPLOYMENT_NAME: kitchenflow-api
+  CONTAINER_NAME: api
+  ECR_REPOSITORY: fiap-fase4-infra-kitchenflow-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      # v4.1.1
+      # IMPORTANTE: Substitua o SHA abaixo pelo SHA real da versão v4.1.1
+      # Acesse: https://github.com/actions/checkout/releases/tag/v4.1.1
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+    - name: Configure AWS credentials
+      # v4.0.2
+      # IMPORTANTE: Substitua o SHA abaixo pelo SHA real da versão v4.0.2
+      # Acesse: https://github.com/aws-actions/configure-aws-credentials/releases/tag/v4.0.2
+      uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Get ECR registry
+      id: ecr-registry
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        echo "registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
+        echo "ECR Registry: ${ECR_REGISTRY}"
+
+    - name: Set image tag
+      id: image-tag
+      run: |
+        if [ -z "${{ github.event.inputs.image_tag }}" ]; then
+          IMAGE_TAG="${{ github.sha }}"
+        else
+          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+        fi
+        echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "Image Tag: ${IMAGE_TAG}"
+
+    - name: Validate images exist in ECR
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-registry.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+      run: |
+        echo "Validating images exist in ECR..."
+        aws ecr describe-images --repository-name ${ECR_REPOSITORY} --image-ids imageTag=api-${IMAGE_TAG} --region ${AWS_REGION} || exit 1
+        if [ "${{ github.event.inputs.skip_migrator }}" != "true" ]; then
+          aws ecr describe-images --repository-name ${ECR_REPOSITORY} --image-ids imageTag=migrator-${IMAGE_TAG} --region ${AWS_REGION} || exit 1
+        fi
+        echo "Images validated successfully!"
+
+    - name: Install kubectl
+      # v3.3
+      # IMPORTANTE: Substitua pela tag ou SHA real da versão desejada
+      # Acesse: https://github.com/azure/setup-kubectl/releases
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl for EKS
+      run: |
+        aws eks update-kubeconfig \
+          --name ${EKS_CLUSTER_NAME} \
+          --region ${AWS_REGION}
+        kubectl version --client
+
+    - name: Update API deployment image
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-registry.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+      run: |
+        echo "Updating deployment image..."
+        FULL_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:api-${IMAGE_TAG}"
+        echo "Setting image to: ${FULL_IMAGE}"
+        kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${FULL_IMAGE} -n ${KUBERNETES_NAMESPACE}
+        echo "Deployment image updated successfully!"
+
+    - name: Wait for API deployment rollout
+      run: |
+        echo "Waiting for API deployment rollout..."
+        kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${KUBERNETES_NAMESPACE} --timeout=5m
+        echo "API deployment rollout completed!"
+
+    - name: Verify API deployment
+      run: |
+        echo "Verifying API deployment..."
+        kubectl get deployment ${DEPLOYMENT_NAME} -n ${KUBERNETES_NAMESPACE}
+        kubectl get pods -l app=kitchenflow-api -n ${KUBERNETES_NAMESPACE}
+        echo "API deployment verified!"
+
+    - name: Create and execute Migrator Job
+      if: ${{ !github.event.inputs.skip_migrator }}
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-registry.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+      run: |
+        echo "Creating Migrator Job..."
+        # Jobs não podem ser atualizados, então criamos um novo com timestamp único
+        JOB_NAME="kitchenflow-migrator-$(date +%s)"
+        FULL_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:migrator-${IMAGE_TAG}"
+        echo "Job name: ${JOB_NAME}"
+        echo "Image: ${FULL_IMAGE}"
+        
+        # Criar job baseado no template do projeto de infra
+        cat <<EOF | kubectl apply -f -
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: ${JOB_NAME}
+          namespace: ${KUBERNETES_NAMESPACE}
+          labels:
+            app: kitchenflow-migrator
+            service: kitchenflow
+        spec:
+          completions: 1
+          parallelism: 1
+          backoffLimit: 3
+          template:
+            metadata:
+              labels:
+                app: kitchenflow-migrator
+                service: kitchenflow
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: migrator
+                image: ${FULL_IMAGE}
+                imagePullPolicy: Always
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "512Mi"
+                terminationGracePeriodSeconds: 30
+                envFrom:
+                - configMapRef:
+                    name: kitchenflow-config
+                - secretRef:
+                    name: kitchenflow-secrets
+                command: ["dotnet", "FastFood.KitchenFlow.Migrator.dll"]
+        EOF
+        echo "Migrator Job created successfully!"
+
+    - name: Wait for Migrator Job completion
+      if: ${{ !github.event.inputs.skip_migrator }}
+      run: |
+        echo "Waiting for Migrator Job to complete..."
+        # Buscar o nome do job mais recente
+        JOB_NAME=$(kubectl get jobs -n ${KUBERNETES_NAMESPACE} -l app=kitchenflow-migrator --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+        if [ -n "${JOB_NAME}" ]; then
+          echo "Waiting for job: ${JOB_NAME}"
+          kubectl wait --for=condition=complete --timeout=10m job/${JOB_NAME} -n ${KUBERNETES_NAMESPACE} || true
+          echo "Migrator Job completed!"
+        else
+          echo "No Migrator Job found!"
+          exit 1
+        fi
+
+    - name: Verify Migrator Job
+      if: ${{ !github.event.inputs.skip_migrator }}
+      run: |
+        echo "Verifying Migrator Job..."
+        JOB_NAME=$(kubectl get jobs -n ${KUBERNETES_NAMESPACE} -l app=kitchenflow-migrator --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+        if [ -n "${JOB_NAME}" ]; then
+          kubectl get job ${JOB_NAME} -n ${KUBERNETES_NAMESPACE}
+          kubectl get pods -l app=kitchenflow-migrator -n ${KUBERNETES_NAMESPACE}
+          kubectl logs -l app=kitchenflow-migrator -n ${KUBERNETES_NAMESPACE} --tail=50 || true
+          echo "Migrator Job verified!"
+        else
+          echo "No Migrator Job found!"
+        fi
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "Deployment failed! Attempting rollback..."
+        kubectl rollout undo deployment/${DEPLOYMENT_NAME} -n ${KUBERNETES_NAMESPACE} || true
+        echo "Rollback completed!"
+

@@ -1,0 +1,104 @@
+name: Push to ECR
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag da imagem (padrão: SHA do commit)'
+        required: false
+        default: ''
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: fiap-fase4-infra-kitchenflow-api
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      # v4.1.1
+      # IMPORTANTE: Substitua o SHA abaixo pelo SHA real da versão v4.1.1
+      # Acesse: https://github.com/actions/checkout/releases/tag/v4.1.1
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+    - name: Configure AWS credentials
+      # v4.0.2
+      # IMPORTANTE: Substitua o SHA abaixo pelo SHA real da versão v4.0.2
+      # Acesse: https://github.com/aws-actions/configure-aws-credentials/releases/tag/v4.0.2
+      uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      # v2.2.0
+      # IMPORTANTE: Substitua o SHA abaixo pelo SHA real da versão v2.2.0
+      # Acesse: https://github.com/aws-actions/amazon-ecr-login/releases/tag/v2.2.0
+      uses: aws-actions/amazon-ecr-login@a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
+
+    - name: Get ECR registry
+      id: ecr-registry
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        echo "registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
+        echo "ECR Registry: ${ECR_REGISTRY}"
+
+    - name: Set image tag
+      id: image-tag
+      run: |
+        if [ -z "${{ github.event.inputs.image_tag }}" ]; then
+          IMAGE_TAG="${{ github.sha }}"
+        else
+          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+        fi
+        echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "Image Tag: ${IMAGE_TAG}"
+
+    - name: Build and push API image
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-registry.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+      run: |
+        echo "Building API image..."
+        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:api-${IMAGE_TAG} \
+          -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:api-latest \
+          -f src/InterfacesExternas/FastFood.KitchenFlow.Api/Dockerfile .
+        
+        echo "Pushing API image..."
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:api-${IMAGE_TAG}
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:api-latest
+        
+        echo "API image pushed: ${ECR_REGISTRY}/${ECR_REPOSITORY}:api-${IMAGE_TAG}"
+
+    - name: Build and push Migrator image
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-registry.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+      run: |
+        echo "Building Migrator image..."
+        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:migrator-${IMAGE_TAG} \
+          -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:migrator-latest \
+          -f src/InterfacesExternas/FastFood.KitchenFlow.Migrator/Dockerfile .
+        
+        echo "Pushing Migrator image..."
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:migrator-${IMAGE_TAG}
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:migrator-latest
+        
+        echo "Migrator image pushed: ${ECR_REGISTRY}/${ECR_REPOSITORY}:migrator-${IMAGE_TAG}"
+
+    - name: Validate images in ECR
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-registry.outputs.registry }}
+        IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+      run: |
+        echo "Validating images in ECR..."
+        aws ecr describe-images --repository-name ${ECR_REPOSITORY} --image-ids imageTag=api-${IMAGE_TAG} --region ${AWS_REGION} || exit 1
+        aws ecr describe-images --repository-name ${ECR_REPOSITORY} --image-ids imageTag=migrator-${IMAGE_TAG} --region ${AWS_REGION} || exit 1
+        echo "Images validated successfully!"
+
