@@ -40,3 +40,4 @@ Criar workflow GitHub Actions que automatiza o deploy das imagens no cluster Kub
 - [ ] Workflow tem tratamento de erros adequado
 - [ ] Workflow tem mensagens de log claras e informativas
 
+

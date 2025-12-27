@@ -29,3 +29,4 @@ Criar os 2 projetos de testes: Testes Unitários (xUnit) e Testes BDD (xUnit com
 - `dotnet test` executa com sucesso em ambos os projetos
 - Arquivos de exemplo removidos
 
+

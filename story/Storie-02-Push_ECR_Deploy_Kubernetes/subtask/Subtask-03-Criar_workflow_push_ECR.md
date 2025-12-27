@@ -42,3 +42,4 @@ Criar workflow GitHub Actions que automatiza o build e push das imagens Docker (
 - [ ] Secrets do GitHub são referenciadas corretamente
 - [ ] Workflow tem mensagens de log claras e informativas
 
+

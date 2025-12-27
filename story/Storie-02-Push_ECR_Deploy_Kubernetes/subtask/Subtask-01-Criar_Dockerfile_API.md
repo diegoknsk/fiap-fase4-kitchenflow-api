@@ -34,3 +34,4 @@ Criar Dockerfile multi-stage para a API do KitchenFlow, otimizado para produçã
 - [ ] Imagem usa multi-stage build para otimização
 - [ ] Imagem final baseada em `aspnet:8.0` (runtime, não SDK)
 
+

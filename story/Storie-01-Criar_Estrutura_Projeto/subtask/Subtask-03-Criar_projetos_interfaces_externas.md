@@ -27,3 +27,4 @@ Criar os 2 projetos de Interfaces Externas: API HTTP (ASP.NET Core) e Migrator (
 - Arquivos de exemplo removidos da API
 - Projetos compilam individualmente sem erros
 
+

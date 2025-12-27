@@ -38,3 +38,4 @@ Validar que o workflow de deploy no Kubernetes está funcionando corretamente, v
 - [ ] Rollout do deployment foi concluído com sucesso
 - [ ] Job do Migrator foi atualizado (quando necessário)
 
+

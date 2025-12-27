@@ -50,3 +50,4 @@ Criar workflows GitHub Actions para automatizar o build e push das imagens Docke
 - [ ] Workflows seguem padrão de segurança usando commit SHA ao invés de tags de versão
 - [ ] Workflows validam que build, testes e análise Sonar foram bem-sucedidos antes de push (se aplicável)
 
+

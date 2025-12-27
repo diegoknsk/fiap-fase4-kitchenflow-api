@@ -34,3 +34,4 @@ Configurar todas as secrets e variáveis necessárias no GitHub para que os work
 - [ ] Documentação criada explicando como configurar cada secret
 - [ ] Secrets seguem boas práticas de segurança (não commitadas no código)
 
+

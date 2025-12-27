@@ -38,3 +38,4 @@ Criar a estrutura de pastas em cada projeto conforme definido no `kitchenflow-co
 - `dotnet build` ainda compila sem erros
 - Estrutura organizada e pronta para receber código
 
+

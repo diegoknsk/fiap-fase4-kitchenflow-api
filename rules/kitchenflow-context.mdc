@@ -230,22 +230,23 @@ fiap-fase4-kitchenflow-api/
 │   │   │   ├── Ports/             # Interfaces de Gateways (IKitchenOrderGateway, ISqsGateway, IPaymentGateway)
 │   │   │   └── FastFood.KitchenFlow.Application.csproj
 │   │   │
+│   │   └── FastFood.KitchenFlow.CrossCutting/
+│   │       ├── Extensions/         # Extensões (ServiceCollectionExtensions, etc.)
+│   │       └── FastFood.KitchenFlow.CrossCutting.csproj
+│   │
+│   ├── Infra/
 │   │   ├── FastFood.KitchenFlow.Infra/
 │   │   │   ├── Services/          # Implementações de serviços externos (SQS Consumer, etc.)
 │   │   │   ├── BackgroundServices/ # Background Services para consumir SQS
 │   │   │   └── FastFood.KitchenFlow.Infra.csproj
 │   │   │
-│   │   ├── FastFood.KitchenFlow.Infra.Persistence/
-│   │   │   ├── Repositories/      # Implementações de repositórios PostgreSQL
-│   │   │   ├── Entities/          # Entidades de persistência (se necessário)
-│   │   │   ├── Configurations/    # Configurações EF Core (Fluent API)
-│   │   │   ├── DbContext/         # KitchenFlowDbContext
-│   │   │   ├── Migrations/        # Migrations do EF Core
-│   │   │   └── FastFood.KitchenFlow.Infra.Persistence.csproj
-│   │   │
-│   │   └── FastFood.KitchenFlow.CrossCutting/
-│   │       ├── Extensions/         # Extensões (ServiceCollectionExtensions, etc.)
-│   │       └── FastFood.KitchenFlow.CrossCutting.csproj
+│   │   └── FastFood.KitchenFlow.Infra.Persistence/
+│   │       ├── Repositories/      # Implementações de repositórios PostgreSQL
+│   │       ├── Entities/          # Entidades de persistência (se necessário)
+│   │       ├── Configurations/    # Configurações EF Core (Fluent API)
+│   │       ├── DbContext/         # KitchenFlowDbContext
+│   │       ├── Migrations/        # Migrations do EF Core
+│   │       └── FastFood.KitchenFlow.Infra.Persistence.csproj
 │   │
 │   ├── InterfacesExternas/
 │   │   ├── FastFood.KitchenFlow.Api/  # API HTTP ASP.NET Core (para EKS)
@@ -270,21 +271,25 @@ fiap-fase4-kitchenflow-api/
 ```
 
 **Organização da Solução (.sln):**
-- Projetos Core dentro de `Core`
+- Projetos Core dentro de `Core` (Domain, Application, CrossCutting)
+- Projetos de Infra dentro de `Infra` (Infra, Infra.Persistence)
 - Projetos de API/Migrator dentro de `InterfacesExternas`
-- Projetos de testes dentro de `Tests`
+- Projetos de testes dentro de `tests`
 - **SEMPRE adicionar novos projetos ao arquivo de solução após criá-los**
 
 **Nomenclatura de Projetos:**
 - Padrão: `FastFood.KitchenFlow.{Camada}`
-- Exemplos:
+- **Core** (src/Core/):
   - `FastFood.KitchenFlow.Domain`
   - `FastFood.KitchenFlow.Application`
+  - `FastFood.KitchenFlow.CrossCutting`
+- **Infra** (src/Infra/):
   - `FastFood.KitchenFlow.Infra`
   - `FastFood.KitchenFlow.Infra.Persistence`
-  - `FastFood.KitchenFlow.CrossCutting`
+- **InterfacesExternas** (src/InterfacesExternas/):
   - `FastFood.KitchenFlow.Api`
   - `FastFood.KitchenFlow.Migrator`
+- **Tests** (src/tests/):
   - `FastFood.KitchenFlow.Tests.Unit`
   - `FastFood.KitchenFlow.Tests.Bdd`
 

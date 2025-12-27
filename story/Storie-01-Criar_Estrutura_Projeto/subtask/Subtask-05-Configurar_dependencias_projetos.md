@@ -57,3 +57,4 @@ Configurar as referências de projeto corretas entre todas as camadas, seguindo 
 - `dotnet build` compila toda a solução sem erros
 - Não há dependências circulares
 
+

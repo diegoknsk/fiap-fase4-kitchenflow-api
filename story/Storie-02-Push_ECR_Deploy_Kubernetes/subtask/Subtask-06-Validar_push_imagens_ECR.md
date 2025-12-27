@@ -36,3 +36,4 @@ Validar que o workflow de push para ECR está funcionando corretamente, verifica
 - [ ] Imagens podem ser executadas localmente após pull
 - [ ] Metadata das imagens está correto (tamanho, data de criação, etc.)
 
+

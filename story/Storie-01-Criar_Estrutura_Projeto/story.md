@@ -9,25 +9,30 @@ Criar a solução .NET 8 com todos os projetos das camadas (Domain, Application,
 ## Escopo Técnico
 - Tecnologias: .NET 8, ASP.NET Core, Entity Framework Core (preparação)
 - Estrutura de projetos:
-  - `FastFood.KitchenFlow.Domain` (Class Library)
-  - `FastFood.KitchenFlow.Application` (Class Library)
-  - `FastFood.KitchenFlow.Infra` (Class Library)
-  - `FastFood.KitchenFlow.Infra.Persistence` (Class Library)
-  - `FastFood.KitchenFlow.CrossCutting` (Class Library)
-  - `FastFood.KitchenFlow.Api` (Web API)
-  - `FastFood.KitchenFlow.Migrator` (Console Application)
-  - `FastFood.KitchenFlow.Tests.Unit` (xUnit Test Project)
-  - `FastFood.KitchenFlow.Tests.Bdd` (xUnit Test Project com SpecFlow)
+  - **Core** (`src/Core/`):
+    - `FastFood.KitchenFlow.Domain` (Class Library)
+    - `FastFood.KitchenFlow.Application` (Class Library)
+    - `FastFood.KitchenFlow.CrossCutting` (Class Library)
+  - **Infra** (`src/Infra/`):
+    - `FastFood.KitchenFlow.Infra` (Class Library)
+    - `FastFood.KitchenFlow.Infra.Persistence` (Class Library)
+  - **InterfacesExternas** (`src/InterfacesExternas/`):
+    - `FastFood.KitchenFlow.Api` (Web API)
+    - `FastFood.KitchenFlow.Migrator` (Console Application)
+  - **Tests** (`src/tests/`):
+    - `FastFood.KitchenFlow.Tests.Unit` (xUnit Test Project)
+    - `FastFood.KitchenFlow.Tests.Bdd` (xUnit Test Project com SpecFlow)
 - Arquivos afetados:
   - Solução `.sln` na raiz
-  - Estrutura de pastas `src/Core/`, `src/InterfacesExternas/`, `src/tests/`
+  - Estrutura de pastas `src/Core/`, `src/Infra/`, `src/InterfacesExternas/`, `src/tests/`
   - `Program.cs` na API com rota básica
   - `appsettings.json` na API
 
 ## Subtasks
 
 - [x] [Subtask 01: Criar solução .NET e estrutura de diretórios](./subtask/Subtask-01-Criar_solucao_estrutura_diretorios.md)
-- [x] [Subtask 02: Criar projetos Core (Domain, Application, Infra, Infra.Persistence, CrossCutting)](./subtask/Subtask-02-Criar_projetos_core.md)
+- [x] [Subtask 02: Criar projetos Core (Domain, Application, CrossCutting)](./subtask/Subtask-02-Criar_projetos_core.md)
+- [x] [Subtask 02b: Criar projetos Infra (Infra, Infra.Persistence)](./subtask/Subtask-02b-Criar_projetos_infra.md)
 - [x] [Subtask 03: Criar projetos InterfacesExternas (Api, Migrator)](./subtask/Subtask-03-Criar_projetos_interfaces_externas.md)
 - [x] [Subtask 04: Criar projetos de testes (Tests.Unit, Tests.Bdd)](./subtask/Subtask-04-Criar_projetos_testes.md)
 - [x] [Subtask 05: Configurar dependências entre projetos](./subtask/Subtask-05-Configurar_dependencias_projetos.md)
@@ -39,7 +44,7 @@ Criar a solução .NET 8 com todos os projetos das camadas (Domain, Application,
 ## Critérios de Aceite da História
 
 - [x] Solução `.sln` criada na raiz do projeto
-- [x] Todos os 9 projetos criados nas pastas corretas (`src/Core/`, `src/InterfacesExternas/`, `src/tests/`)
+- [x] Todos os 9 projetos criados nas pastas corretas (`src/Core/`, `src/Infra/`, `src/InterfacesExternas/`, `src/tests/`)
 - [x] Todos os projetos adicionados à solução
 - [x] Dependências entre projetos configuradas corretamente:
   - Application → Domain

@@ -39,3 +39,4 @@ Realizar validação final da estrutura completa do projeto, garantindo que tudo
 - Namespaces seguem padrão dos nomes dos projetos
 - Projeto está pronto para desenvolvimento das próximas stories
 
+

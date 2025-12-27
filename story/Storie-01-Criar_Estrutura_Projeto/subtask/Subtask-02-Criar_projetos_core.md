@@ -1,13 +1,11 @@
 # Subtask 02: Criar projetos Core (Domain, Application, Infra, Infra.Persistence, CrossCutting)
 
 ## Descrição
-Criar os 5 projetos Core da Clean Architecture dentro de `src/Core/`. Estes projetos formam o núcleo da aplicação e não dependem de frameworks externos (exceto Domain que não depende de nada).
+Criar os 3 projetos Core da Clean Architecture dentro de `src/Core/`. Estes projetos formam o núcleo da aplicação e não dependem de frameworks externos (exceto Domain que não depende de nada).
 
 ## Passos de implementação
 - Criar projeto `FastFood.KitchenFlow.Domain` (Class Library) em `src/Core/FastFood.KitchenFlow.Domain/`
 - Criar projeto `FastFood.KitchenFlow.Application` (Class Library) em `src/Core/FastFood.KitchenFlow.Application/`
-- Criar projeto `FastFood.KitchenFlow.Infra` (Class Library) em `src/Core/FastFood.KitchenFlow.Infra/`
-- Criar projeto `FastFood.KitchenFlow.Infra.Persistence` (Class Library) em `src/Core/FastFood.KitchenFlow.Infra.Persistence/`
 - Criar projeto `FastFood.KitchenFlow.CrossCutting` (Class Library) em `src/Core/FastFood.KitchenFlow.CrossCutting/`
 - Adicionar todos os projetos à solução usando `dotnet sln add`
 - Configurar target framework .NET 8 em todos os projetos
@@ -18,9 +16,10 @@ Criar os 5 projetos Core da Clean Architecture dentro de `src/Core/`. Estes proj
 - Verificar que os arquivos `.csproj` foram criados com `<TargetFramework>net8.0</TargetFramework>`
 
 ## Critérios de aceite
-- 5 projetos Core criados nas pastas corretas
+- 3 projetos Core criados nas pastas corretas (`src/Core/`)
 - Todos os projetos configurados com .NET 8
 - Todos os projetos adicionados à solução
 - Cada projeto compila individualmente sem erros
 - Estrutura de pastas `src/Core/` criada corretamente
+
 

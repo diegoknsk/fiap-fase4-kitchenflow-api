@@ -6,7 +6,8 @@ Criar a solução .NET 8 e a estrutura de diretórios base do projeto KitchenFlo
 ## Passos de implementação
 - Criar solução .NET 8 na raiz: `FastFood.KitchenFlow.sln`
 - Criar estrutura de diretórios:
-  - `src/Core/` (para projetos Domain, Application, Infra, Infra.Persistence, CrossCutting)
+  - `src/Core/` (para projetos Domain, Application, CrossCutting)
+  - `src/Infra/` (para projetos Infra e Infra.Persistence)
   - `src/InterfacesExternas/` (para projetos Api e Migrator)
   - `src/tests/` (para projetos de testes)
 - Verificar que a estrutura está alinhada com o projeto de referência `C:\Projetos\Fiap\fiap-fase4-auth-lambda`
@@ -18,7 +19,8 @@ Criar a solução .NET 8 e a estrutura de diretórios base do projeto KitchenFlo
 
 ## Critérios de aceite
 - Solução `FastFood.KitchenFlow.sln` criada na raiz
-- Diretórios `src/Core/`, `src/InterfacesExternas/`, `src/tests/` criados
+- Diretórios `src/Core/`, `src/Infra/`, `src/InterfacesExternas/`, `src/tests/` criados
 - Estrutura de diretórios alinhada com projeto de referência
 - Solução pode ser aberta no Visual Studio ou VS Code
+
 
