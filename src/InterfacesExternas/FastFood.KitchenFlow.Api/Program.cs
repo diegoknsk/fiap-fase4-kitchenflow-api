@@ -1,5 +1,36 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Verificar se ASPNETCORE_URLS contém apenas HTTP (sem HTTPS)
+var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? builder.Configuration["Urls"] ?? "";
+var isHttpOnly = !string.IsNullOrEmpty(urls) && 
+                 urls.Split(';').All(u => u.Trim().StartsWith("http://", StringComparison.OrdinalIgnoreCase));
+
+// Quando for HTTP-only, configurar o Kestrel explicitamente para usar apenas HTTP
+// Isso garante que não haja tentativa de usar HTTPS, mesmo que outras configurações sugiram isso
+if (isHttpOnly)
+{
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        // Extrair a porta da primeira URL (padrão 80 se não especificado)
+        var firstUrl = urls.Split(';').FirstOrDefault()?.Trim() ?? "http://+:80";
+        var port = 80;
+        
+        // Extrair porta da URL (formato: http://+:80 ou http://*:80)
+        var lastColonIndex = firstUrl.LastIndexOf(':');
+        if (lastColonIndex > 0 && lastColonIndex < firstUrl.Length - 1)
+        {
+            var portStr = firstUrl.Substring(lastColonIndex + 1);
+            if (int.TryParse(portStr, out var parsedPort))
+            {
+                port = parsedPort;
+            }
+        }
+        
+        // Configurar apenas HTTP na porta especificada (sem HTTPS)
+        options.ListenAnyIP(port);
+    });
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -33,8 +64,8 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Apenas redirecionar HTTPS se não estiver em desenvolvimento
-if (!app.Environment.IsDevelopment())
+// Apenas redirecionar HTTPS se estiver em desenvolvimento E não for HTTP-only
+if (app.Environment.IsDevelopment() && !isHttpOnly)
 {
     app.UseHttpsRedirection();
 }
