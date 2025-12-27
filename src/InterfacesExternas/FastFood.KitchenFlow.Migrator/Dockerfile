@@ -22,10 +22,12 @@ RUN dotnet publish src/InterfacesExternas/FastFood.KitchenFlow.Migrator/FastFood
     /p:CopyOutputSymbolsToPublishDirectory=false \
     /p:CopyOutputXmlDocumentationToPublishDirectory=false
 
-# Copiar migrations se existirem
+# Copiar migrations se existirem (criar diretório vazio se não existir)
 RUN mkdir -p /migrations && \
-    if [ -d "src/Infra/FastFood.KitchenFlow.Infra.Persistence/Migrations" ]; then \
+    if [ -d "src/Infra/FastFood.KitchenFlow.Infra.Persistence/Migrations" ] && [ "$(ls -A src/Infra/FastFood.KitchenFlow.Infra.Persistence/Migrations 2>/dev/null)" ]; then \
         cp -r src/Infra/FastFood.KitchenFlow.Infra.Persistence/Migrations/* /migrations/ 2>/dev/null || true; \
+    else \
+        touch /migrations/.gitkeep; \
     fi
 
 # Etapa 2: imagem final para execução
@@ -39,8 +41,8 @@ COPY --from=build /out ./
 # Copiar arquivo de configuração
 COPY src/InterfacesExternas/FastFood.KitchenFlow.Migrator/appsettings.json ./appsettings.json
 
-# Copiar migrations se existirem
-COPY --from=build /migrations ./Migrations 2>/dev/null || true
+# Copiar migrations (o diretório sempre existe no stage anterior, mesmo que vazio)
+COPY --from=build /migrations ./Migrations
 
 # Segurança: Rodar como não-root (seguindo regras do projeto)
 RUN chown -R 1001:1001 /app
