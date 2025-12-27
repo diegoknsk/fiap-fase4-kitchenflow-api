@@ -4,7 +4,7 @@ namespace FastFood.KitchenFlow.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class HealthController : ControllerBase
+public class HelloController : ControllerBase
 {
     [HttpGet]
     public IActionResult Get()

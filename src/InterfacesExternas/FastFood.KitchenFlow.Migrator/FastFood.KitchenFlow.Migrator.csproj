@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\FastFood.KitchenFlow.Infra.Persistence\FastFood.KitchenFlow.Infra.Persistence.csproj" />
     <ProjectReference Include="..\..\Core\FastFood.KitchenFlow.CrossCutting\FastFood.KitchenFlow.CrossCutting.csproj" />
+    <ProjectReference Include="..\..\Infra\FastFood.KitchenFlow.Infra.Persistence\FastFood.KitchenFlow.Infra.Persistence.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
