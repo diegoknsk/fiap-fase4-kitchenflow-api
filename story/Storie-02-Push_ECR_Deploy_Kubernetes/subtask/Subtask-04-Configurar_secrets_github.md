@@ -35,3 +35,5 @@ Configurar todas as secrets e variáveis necessárias no GitHub para que os work
 - [ ] Secrets seguem boas práticas de segurança (não commitadas no código)
 
 
+
+

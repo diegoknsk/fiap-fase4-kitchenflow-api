@@ -36,3 +36,5 @@ Configurar o `Program.cs` da API para habilitar Swagger/OpenAPI, configurar CORS
 - `appsettings.json` configurado com portas adequadas
 
 
+
+

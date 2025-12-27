@@ -36,3 +36,5 @@ Criar Dockerfile multi-stage para o Migrator do KitchenFlow, incluindo migration
 - [ ] Imagem final baseada em `aspnet:8.0` (runtime, não SDK)
 
 
+
+

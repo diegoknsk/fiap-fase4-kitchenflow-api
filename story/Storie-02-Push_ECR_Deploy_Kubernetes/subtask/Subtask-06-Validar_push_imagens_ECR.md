@@ -37,3 +37,5 @@ Validar que o workflow de push para ECR está funcionando corretamente, verifica
 - [ ] Metadata das imagens está correto (tamanho, data de criação, etc.)
 
 
+
+

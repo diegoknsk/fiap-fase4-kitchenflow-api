@@ -39,3 +39,5 @@ Validar que o workflow de deploy no Kubernetes está funcionando corretamente, v
 - [ ] Job do Migrator foi atualizado (quando necessário)
 
 
+
+

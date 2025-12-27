@@ -21,3 +21,5 @@ Criar os 2 projetos de Infraestrutura dentro de `src/Infra/`. Estes projetos imp
 - Cada projeto compila individualmente sem erros
 - Estrutura de pastas `src/Infra/` criada corretamente
 
+
+

@@ -58,3 +58,5 @@ Configurar as referências de projeto corretas entre todas as camadas, seguindo 
 - Não há dependências circulares
 
 
+
+
