@@ -11,7 +11,8 @@ COPY src/Infra/FastFood.KitchenFlow.Infra/FastFood.KitchenFlow.Infra.csproj src/
 COPY src/Infra/FastFood.KitchenFlow.Infra.Persistence/FastFood.KitchenFlow.Infra.Persistence.csproj src/Infra/FastFood.KitchenFlow.Infra.Persistence/
 COPY src/InterfacesExternas/FastFood.KitchenFlow.Migrator/FastFood.KitchenFlow.Migrator.csproj src/InterfacesExternas/FastFood.KitchenFlow.Migrator/
 
-RUN dotnet restore src/InterfacesExternas/FastFood.KitchenFlow.Migrator/FastFood.KitchenFlow.Migrator.csproj
+# Restaurar dependências do Migrator (isso também restaura dependências transitivas)
+RUN dotnet restore src/InterfacesExternas/FastFood.KitchenFlow.Migrator/FastFood.KitchenFlow.Migrator.csproj --verbosity quiet
 
 # Copiar todo o código
 COPY . .
