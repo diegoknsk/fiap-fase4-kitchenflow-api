@@ -26,15 +26,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
 
-# Copiar arquivos publicados
 COPY --from=build /app/publish .
 
-# Segurança: Rodar como não-root (seguindo regras do projeto)
-RUN chown -R 1001:1001 /app
-USER 1001:1001
-
 ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Production
 
 EXPOSE 80
 
