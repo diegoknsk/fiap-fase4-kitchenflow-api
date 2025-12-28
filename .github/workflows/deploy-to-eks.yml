@@ -1,0 +1,168 @@
+name: Deploy KitchenFlow Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_migrator:
+        description: 'Pular execução do Migrator'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: eks-fiap-fase4-infra
+  KUBERNETES_NAMESPACE: kitchenflow
+  DEPLOYMENT_NAME: kitchenflow-api
+  CONTAINER_NAME: api
+  ECR_REPOSITORY: fiap-fase4-infra-kitchenflow-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      tag: ${{ steps.set-tag.outputs.tag }}
+      api-image: ${{ steps.set-tag.outputs.api-image }}
+      migrator-image: ${{ steps.set-tag.outputs.migrator-image }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
+    - name: Set TAG and image names
+      id: set-tag
+      run: |
+        TAG=$(git rev-parse --short HEAD)
+        API_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:api-${TAG}"
+        MIGRATOR_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:migrator-${TAG}"
+        
+        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "api-image=${API_IMAGE}" >> $GITHUB_OUTPUT
+        echo "migrator-image=${MIGRATOR_IMAGE}" >> $GITHUB_OUTPUT
+        
+        echo "TAG: ${TAG}"
+        echo "API Image: ${API_IMAGE}"
+        echo "Migrator Image: ${MIGRATOR_IMAGE}"
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build and push API image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/InterfacesExternas/FastFood.KitchenFlow.Api/Dockerfile
+        push: true
+        tags: |
+          ${{ steps.set-tag.outputs.api-image }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:api-latest
+        cache-from: type=registry,ref=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:api-latest
+        cache-to: type=inline
+    
+    - name: Build and push Migrator image
+      if: ${{ !github.event.inputs.skip_migrator }}
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/InterfacesExternas/FastFood.KitchenFlow.Migrator/Dockerfile
+        push: true
+        tags: |
+          ${{ steps.set-tag.outputs.migrator-image }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:migrator-latest
+        cache-from: type=registry,ref=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:migrator-latest
+        cache-to: type=inline
+    
+    - name: Configure kubectl
+      run: |
+        aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+        kubectl version --client
+    
+    - name: Update API deployment
+      run: |
+        echo "Updating ${DEPLOYMENT_NAME} deployment with new image..."
+        kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${{ steps.set-tag.outputs.api-image }} -n ${{ env.KUBERNETES_NAMESPACE }}
+        
+        echo "Waiting for rollout to complete..."
+        kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${{ env.KUBERNETES_NAMESPACE }} --timeout=300s
+        
+        echo "API deployment updated successfully"
+    
+    - name: Recreate Migrator job
+      if: ${{ !github.event.inputs.skip_migrator }}
+      run: |
+        echo "Deleting existing migrator job if it exists..."
+        kubectl delete job kitchenflow-migrator -n ${{ env.KUBERNETES_NAMESPACE }} --ignore-not-found=true
+        
+        echo "Waiting for job to be fully deleted..."
+        sleep 10
+        
+        echo "Creating new migrator job..."
+        cat <<EOF | kubectl apply -f -
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: kitchenflow-migrator
+          namespace: ${{ env.KUBERNETES_NAMESPACE }}
+          labels:
+            app: kitchenflow-migrator
+            service: kitchenflow
+        spec:
+          completions: 1
+          parallelism: 1
+          backoffLimit: 3
+          template:
+            metadata:
+              labels:
+                app: kitchenflow-migrator
+                service: kitchenflow
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: migrator
+                image: ${{ steps.set-tag.outputs.migrator-image }}
+                imagePullPolicy: Always
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "512Mi"
+                terminationGracePeriodSeconds: 30
+                envFrom:
+                - configMapRef:
+                    name: kitchenflow-config
+                - secretRef:
+                    name: kitchenflow-secrets
+                command: ["dotnet", "FastFood.KitchenFlow.Migrator.dll"]
+        EOF
+        
+        echo "Waiting for migrator job to complete..."
+        kubectl wait --for=condition=complete job/kitchenflow-migrator -n ${{ env.KUBERNETES_NAMESPACE }} --timeout=600s
+        
+        echo "Migrator job completed successfully"
+    
+    - name: Verify deployment
+      run: |
+        echo "Verifying deployment..."
+        kubectl get deployment ${DEPLOYMENT_NAME} -n ${{ env.KUBERNETES_NAMESPACE }}
+        kubectl get pods -l app=kitchenflow-api -n ${{ env.KUBERNETES_NAMESPACE }}
+        if [ "${{ github.event.inputs.skip_migrator }}" != "true" ]; then
+          kubectl get job kitchenflow-migrator -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl get pods -l app=kitchenflow-migrator -n ${{ env.KUBERNETES_NAMESPACE }}
+        fi
+        echo "Deployment verified successfully!"
+
