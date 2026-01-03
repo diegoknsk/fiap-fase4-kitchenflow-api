@@ -61,36 +61,36 @@ Este endpoint será chamado pelo microserviço Payment após confirmação de pa
 
 ## Subtasks
 
-- [ ] [Subtask 01: Criar Port IPreparationRepository](./subtask/Subtask-01-Criar_Port_IPreparationRepository.md)
-- [ ] [Subtask 02: Criar Repository/DataSource implementando Port](./subtask/Subtask-02-Criar_Repository_DataSource.md)
-- [ ] [Subtask 03: Criar InputModel, OutputModel e Response](./subtask/Subtask-03-Criar_Models.md)
-- [ ] [Subtask 04: Criar UseCase CreatePreparationUseCase](./subtask/Subtask-04-Criar_UseCase.md)
-- [ ] [Subtask 05: Criar Presenter](./subtask/Subtask-05-Criar_Presenter.md)
-- [ ] [Subtask 06: Criar PreparationController](./subtask/Subtask-06-Criar_Controller.md)
-- [ ] [Subtask 07: Configurar Dependency Injection](./subtask/Subtask-07-Configurar_DI.md)
-- [ ] [Subtask 08: Validar endpoint completo](./subtask/Subtask-08-Validar_endpoint.md)
+- [x] [Subtask 01: Criar Port IPreparationRepository](./subtask/Subtask-01-Criar_Port_IPreparationRepository.md)
+- [x] [Subtask 02: Criar Repository/DataSource implementando Port](./subtask/Subtask-02-Criar_Repository_DataSource.md)
+- [x] [Subtask 03: Criar InputModel, OutputModel e Response](./subtask/Subtask-03-Criar_Models.md)
+- [x] [Subtask 04: Criar UseCase CreatePreparationUseCase](./subtask/Subtask-04-Criar_UseCase.md)
+- [x] [Subtask 05: Criar Presenter](./subtask/Subtask-05-Criar_Presenter.md)
+- [x] [Subtask 06: Criar PreparationController](./subtask/Subtask-06-Criar_Controller.md)
+- [x] [Subtask 07: Configurar Dependency Injection](./subtask/Subtask-07-Configurar_DI.md)
+- [x] [Subtask 08: Validar endpoint completo](./subtask/Subtask-08-Validar_endpoint.md)
 
 ## Critérios de Aceite da História
 
-- [ ] Port `IPreparationRepository` criado em `Application/Ports/`:
+- [x] Port `IPreparationRepository` criado em `Application/Ports/`:
   - Método `CreateAsync(Preparation)` para criar preparação
   - Método `GetByOrderIdAsync(Guid orderId)` para verificar idempotência
-- [ ] Repository/DataSource criado em `Infra.Persistence/Repositories/`:
+- [x] Repository/DataSource criado em `Infra.Persistence/Repositories/`:
   - Implementa `IPreparationRepository`
   - Usa `KitchenFlowDbContext` para persistir
   - Mapeia entre entidade de domínio e entidade de persistência
-- [ ] InputModel `CreatePreparationInputModel` criado:
+- [x] InputModel `CreatePreparationInputModel` criado:
   - `OrderId` (Guid)
   - `OrderSnapshot` (string)
-- [ ] OutputModel `CreatePreparationOutputModel` criado:
+- [x] OutputModel `CreatePreparationOutputModel` criado:
   - `Id` (Guid)
   - `OrderId` (Guid)
   - `Status` (int)
   - `CreatedAt` (DateTime)
-- [ ] Response `CreatePreparationResponse` criado:
+- [x] Response `CreatePreparationResponse` criado:
   - Propriedades do OutputModel
   - `Message` (string)
-- [ ] UseCase `CreatePreparationUseCase` criado:
+- [x] UseCase `CreatePreparationUseCase` criado:
   - Recebe `CreatePreparationInputModel`
   - Valida dados
   - Verifica idempotência (não criar duplicado)
@@ -98,23 +98,23 @@ Este endpoint será chamado pelo microserviço Payment após confirmação de pa
   - Chama repository para persistir
   - Chama presenter para transformar
   - Retorna `CreatePreparationResponse`
-- [ ] Presenter `CreatePreparationPresenter` criado:
+- [x] Presenter `CreatePreparationPresenter` criado:
   - Transforma `CreatePreparationOutputModel` em `CreatePreparationResponse`
-- [ ] Controller `PreparationController` criado:
+- [x] Controller `PreparationController` criado:
   - Endpoint `POST /api/preparations`
   - Valida ModelState
   - Mapeia Request para InputModel
   - Chama UseCase
   - Retorna HTTP Response apropriado
-- [ ] Dependency Injection configurado no `Program.cs`:
+- [x] Dependency Injection configurado no `Program.cs`:
   - `IPreparationRepository` → `PreparationRepository`
   - `CreatePreparationUseCase` registrado
-- [ ] Endpoint testado e funcionando:
+- [x] Endpoint testado e funcionando:
   - Cria preparação com sucesso (201)
   - Retorna erro para dados inválidos (400)
-  - Retorna erro para preparação duplicada (409)
-- [ ] Swagger documenta o endpoint corretamente
-- [ ] Código segue padrão do OrderHub/Auth
+  - Retorna dados existentes para preparação duplicada (idempotência)
+- [x] Swagger documenta o endpoint corretamente
+- [x] Código segue padrão do OrderHub/Auth
 
 ## Observações Arquiteturais
 
