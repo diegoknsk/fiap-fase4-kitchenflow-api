@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Core\FastFood.KitchenFlow.Application\FastFood.KitchenFlow.Application.csproj" />
     <ProjectReference Include="..\..\Core\FastFood.KitchenFlow.Domain\FastFood.KitchenFlow.Domain.csproj" />
   </ItemGroup>
 

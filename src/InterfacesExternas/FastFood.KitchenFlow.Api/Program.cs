@@ -1,4 +1,7 @@
+using FastFood.KitchenFlow.Application.Ports;
+using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
 using FastFood.KitchenFlow.Infra.Persistence;
+using FastFood.KitchenFlow.Infra.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +15,10 @@ builder.Services.AddSwaggerGen();
 // Configure DbContext
 builder.Services.AddDbContext<KitchenFlowDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure Dependency Injection
+builder.Services.AddScoped<IPreparationRepository, PreparationRepository>();
+builder.Services.AddScoped<CreatePreparationUseCase>();
 
 var app = builder.Build();
 
