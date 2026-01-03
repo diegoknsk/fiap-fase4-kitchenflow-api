@@ -120,6 +120,8 @@ Criar testes unitários completos para todos os UseCases de PreparationManagemen
 ```csharp
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
+using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
 using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
 using FastFood.KitchenFlow.Domain.Common.Enums;
 using FastFood.KitchenFlow.Domain.Entities.PreparationManagement;
@@ -141,11 +143,11 @@ public class CreatePreparationUseCaseTests
     }
 
     [Fact]
-    public async Task CreatePreparation_WhenValidInput_ShouldReturnSuccess()
+    public async Task CreatePreparation_WhenValidInput_ShouldReturnApiResponseSuccess()
     {
         // Arrange
         var orderId = Guid.NewGuid();
-        var orderSnapshot = """{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}""";
+        var orderSnapshot = $"""{{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}}""";
         
         _mockRepository.Setup(r => r.GetByOrderIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Preparation?)null);
@@ -163,9 +165,16 @@ public class CreatePreparationUseCaseTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().NotBeEmpty();
-        result.OrderId.Should().Be(orderId);
-        result.Status.Should().Be((int)EnumPreparationStatus.Received);
+        result.Should().BeOfType<ApiResponse<CreatePreparationResponse>>();
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("Preparação criada com sucesso.");
+        result.Content.Should().NotBeNull();
+        
+        // Verificar conteúdo (está em Dictionary<string, object> devido ao ToNamedContent)
+        result.Content.Should().BeOfType<Dictionary<string, object>>();
+        var contentDict = result.Content as Dictionary<string, object>;
+        contentDict.Should().ContainKey("createPreparation");
+        
         _mockRepository.Verify(r => r.CreateAsync(It.IsAny<Preparation>()), Times.Once);
     }
 
@@ -176,11 +185,32 @@ public class CreatePreparationUseCaseTests
         var inputModel = new CreatePreparationInputModel
         {
             OrderId = Guid.Empty,
-            OrderSnapshot = """{"orderId":"00000000-0000-0000-0000-000000000000"}"""
+            OrderSnapshot = """{"orderId":"00000000-0000-0000-0000-000000000000","orderCode":"ORD-001","totalPrice":50.00,"items":[]}"""
         };
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+    }
+
+    [Fact]
+    public async Task CreatePreparation_WhenPreparationAlreadyExists_ShouldThrowPreparationAlreadyExistsException()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var orderSnapshot = $"""{{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}}""";
+        var existingPreparation = Preparation.Create(orderId, orderSnapshot);
+        
+        _mockRepository.Setup(r => r.GetByOrderIdAsync(orderId))
+            .ReturnsAsync(existingPreparation);
+
+        var inputModel = new CreatePreparationInputModel
+        {
+            OrderId = orderId,
+            OrderSnapshot = orderSnapshot
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PreparationAlreadyExistsException>(() => _useCase.ExecuteAsync(inputModel));
     }
 
     // ... outros testes
@@ -188,12 +218,16 @@ public class CreatePreparationUseCaseTests
 ```
 
 ## Observações importantes
+- **Padrão ApiResponse<T>**: UseCases retornam `ApiResponse<T>`, não Response models simples
+- **Estrutura ApiResponse**: Verificar `Success`, `Message` e `Content` nas assertions
+- **ToNamedContent**: O `Content` vem formatado como `Dictionary<string, object>` devido ao ToNamedContent
 - **Mocks**: Sempre mockar dependências externas (repositories)
 - **Isolamento**: Cada teste deve ser independente
 - **Nomenclatura**: Seguir padrão `[Método]_[Cenário]_[ResultadoEsperado]`
 - **AAA**: Sempre usar Arrange, Act, Assert
 - **FluentAssertions**: Usar para assertions mais legíveis
 - **Cobertura**: Cobrir todos os caminhos de código (sucesso, falha, edge cases)
+- **Exceções**: UseCases lançam exceções (não retornam ApiResponse.Fail), Controllers tratam exceções
 
 ## Como testar
 - Executar `dotnet test` no projeto de testes

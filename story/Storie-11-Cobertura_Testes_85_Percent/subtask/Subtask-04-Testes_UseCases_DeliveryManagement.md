@@ -91,6 +91,8 @@ Criar testes unitários completos para todos os UseCases de DeliveryManagement (
 ```csharp
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
+using FastFood.KitchenFlow.Application.Responses.DeliveryManagement;
 using FastFood.KitchenFlow.Application.UseCases.DeliveryManagement;
 using FastFood.KitchenFlow.Domain.Common.Enums;
 using FastFood.KitchenFlow.Domain.Entities.DeliveryManagement;
@@ -117,12 +119,13 @@ public class CreateDeliveryUseCaseTests
     }
 
     [Fact]
-    public async Task CreateDelivery_WhenValidInput_ShouldReturnSuccess()
+    public async Task CreateDelivery_WhenValidInput_ShouldReturnApiResponseSuccess()
     {
         // Arrange
         var preparationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
-        var preparation = Preparation.Create(orderId, "{}");
+        var orderSnapshot = $"""{{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}}""";
+        var preparation = Preparation.Create(orderId, orderSnapshot);
         preparation.FinishPreparation(); // Status = Finished
 
         _mockPreparationRepository.Setup(r => r.GetByIdAsync(preparationId))
@@ -143,9 +146,16 @@ public class CreateDeliveryUseCaseTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().NotBeEmpty();
-        result.PreparationId.Should().Be(preparationId);
-        result.Status.Should().Be((int)EnumDeliveryStatus.ReadyForPickup);
+        result.Should().BeOfType<ApiResponse<CreateDeliveryResponse>>();
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("Entrega criada com sucesso.");
+        result.Content.Should().NotBeNull();
+        
+        // Verificar conteúdo (está em Dictionary<string, object> devido ao ToNamedContent)
+        result.Content.Should().BeOfType<Dictionary<string, object>>();
+        var contentDict = result.Content as Dictionary<string, object>;
+        contentDict.Should().ContainKey("createDelivery");
+        
         _mockDeliveryRepository.Verify(r => r.CreateAsync(It.IsAny<Delivery>()), Times.Once);
     }
 
@@ -167,17 +177,45 @@ public class CreateDeliveryUseCaseTests
             () => _useCase.ExecuteAsync(inputModel));
     }
 
+    [Fact]
+    public async Task CreateDelivery_WhenPreparationNotFinished_ShouldThrowPreparationNotFinishedException()
+    {
+        // Arrange
+        var preparationId = Guid.NewGuid();
+        var orderId = Guid.NewGuid();
+        var orderSnapshot = $"""{{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}}""";
+        var preparation = Preparation.Create(orderId, orderSnapshot);
+        // Status = Received (não Finished)
+
+        _mockPreparationRepository.Setup(r => r.GetByIdAsync(preparationId))
+            .ReturnsAsync(preparation);
+
+        var inputModel = new CreateDeliveryInputModel
+        {
+            PreparationId = preparationId,
+            OrderId = orderId
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PreparationNotFinishedException>(
+            () => _useCase.ExecuteAsync(inputModel));
+    }
+
     // ... outros testes
 }
 ```
 
 ## Observações importantes
+- **Padrão ApiResponse<T>**: UseCases retornam `ApiResponse<T>`, não Response models simples
+- **Estrutura ApiResponse**: Verificar `Success`, `Message` e `Content` nas assertions
+- **ToNamedContent**: O `Content` vem formatado como `Dictionary<string, object>` devido ao ToNamedContent
 - **Mocks**: Sempre mockar dependências externas (repositories)
 - **Isolamento**: Cada teste deve ser independente
 - **Nomenclatura**: Seguir padrão `[Método]_[Cenário]_[ResultadoEsperado]`
 - **AAA**: Sempre usar Arrange, Act, Assert
 - **FluentAssertions**: Usar para assertions mais legíveis
 - **Cobertura**: Cobrir todos os caminhos de código (sucesso, falha, edge cases)
+- **Exceções**: UseCases lançam exceções (não retornam ApiResponse.Fail), Controllers tratam exceções
 
 ## Como testar
 - Executar `dotnet test` no projeto de testes

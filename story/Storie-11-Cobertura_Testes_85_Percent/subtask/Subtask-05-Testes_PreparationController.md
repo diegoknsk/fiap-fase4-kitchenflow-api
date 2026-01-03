@@ -99,6 +99,7 @@ Criar testes unitários para o `PreparationController`, focando na validação d
 using FastFood.KitchenFlow.Api.Controllers;
 using FastFood.KitchenFlow.Api.Models.PreparationManagement;
 using FastFood.KitchenFlow.Application.Exceptions;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
 using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
 using FluentAssertions;
@@ -138,7 +139,7 @@ public class PreparationControllerTests
         var request = new CreatePreparationRequest
         {
             OrderId = orderId,
-            OrderSnapshot = "{}"
+            OrderSnapshot = """{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}"""
         };
 
         var response = new CreatePreparationResponse
@@ -146,12 +147,13 @@ public class PreparationControllerTests
             Id = Guid.NewGuid(),
             OrderId = orderId,
             Status = 0,
-            CreatedAt = DateTime.UtcNow,
-            Message = "Preparação criada com sucesso"
+            CreatedAt = DateTime.UtcNow
         };
 
+        var apiResponse = ApiResponse<CreatePreparationResponse>.Ok(response, "Preparação criada com sucesso.");
+
         _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreatePreparationInputModel>()))
-            .ReturnsAsync(response);
+            .ReturnsAsync(apiResponse);
 
         // Act
         var result = await _controller.CreatePreparation(request);
@@ -160,7 +162,11 @@ public class PreparationControllerTests
         result.Should().BeOfType<CreatedAtActionResult>();
         var createdAtResult = result as CreatedAtActionResult;
         createdAtResult!.StatusCode.Should().Be(201);
-        createdAtResult.Value.Should().Be(response);
+        createdAtResult.Value.Should().BeOfType<ApiResponse<CreatePreparationResponse>>();
+        var returnedApiResponse = createdAtResult.Value as ApiResponse<CreatePreparationResponse>;
+        returnedApiResponse!.Success.Should().BeTrue();
+        returnedApiResponse.Message.Should().Be("Preparação criada com sucesso.");
+        returnedApiResponse.Content.Should().NotBeNull();
     }
 
     [Fact]
@@ -177,6 +183,10 @@ public class PreparationControllerTests
         result.Should().BeOfType<BadRequestObjectResult>();
         var badRequestResult = result as BadRequestObjectResult;
         badRequestResult!.StatusCode.Should().Be(400);
+        badRequestResult.Value.Should().BeOfType<ApiResponse<CreatePreparationResponse>>();
+        var apiResponse = badRequestResult.Value as ApiResponse<CreatePreparationResponse>;
+        apiResponse!.Success.Should().BeFalse();
+        apiResponse.Message.Should().Be("Dados inválidos.");
     }
 
     [Fact]
@@ -187,7 +197,7 @@ public class PreparationControllerTests
         var request = new CreatePreparationRequest
         {
             OrderId = orderId,
-            OrderSnapshot = "{}"
+            OrderSnapshot = """{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}"""
         };
 
         _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreatePreparationInputModel>()))
@@ -200,6 +210,40 @@ public class PreparationControllerTests
         result.Should().BeOfType<ConflictObjectResult>();
         var conflictResult = result as ConflictObjectResult;
         conflictResult!.StatusCode.Should().Be(409);
+        conflictResult.Value.Should().BeOfType<ApiResponse<CreatePreparationResponse>>();
+        var apiResponse = conflictResult.Value as ApiResponse<CreatePreparationResponse>;
+        apiResponse!.Success.Should().BeFalse();
+        apiResponse.Message.Should().Contain("já existe");
+    }
+
+    [Fact]
+    public async Task GetPreparations_WhenValidRequest_ShouldReturn200OK()
+    {
+        // Arrange
+        var response = new GetPreparationsResponse
+        {
+            Preparations = new List<GetPreparationsResponse.PreparationItem>(),
+            TotalCount = 0,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        var apiResponse = ApiResponse<GetPreparationsResponse>.Ok(response, "Lista de preparações retornada com sucesso.");
+
+        _mockGetUseCase.Setup(u => u.ExecuteAsync(It.IsAny<GetPreparationsInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.GetPreparations(1, 10, null);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult!.StatusCode.Should().Be(200);
+        okResult.Value.Should().BeOfType<ApiResponse<GetPreparationsResponse>>();
+        var returnedApiResponse = okResult.Value as ApiResponse<GetPreparationsResponse>;
+        returnedApiResponse!.Success.Should().BeTrue();
+        returnedApiResponse.Message.Should().Be("Lista de preparações retornada com sucesso.");
     }
 
     // ... outros testes
@@ -207,11 +251,14 @@ public class PreparationControllerTests
 ```
 
 ## Observações importantes
+- **Padrão ApiResponse<T>**: UseCases retornam `ApiResponse<T>`, não Response models simples
 - **Foco no contrato HTTP**: Testar apenas mapeamento e códigos HTTP, não lógica de negócio
-- **Mocks de UseCases**: Sempre mockar UseCases, não testar lógica
-- **ModelState**: Testar validação de ModelState
-- **Exceções**: Testar tratamento de todas as exceções possíveis
+- **Mocks de UseCases**: Sempre mockar UseCases retornando `ApiResponse<T>`, não testar lógica
+- **ModelState**: Testar validação de ModelState (retorna `ApiResponse<T>.Fail()`)
+- **Exceções**: Testar tratamento de todas as exceções possíveis (Controller cria `ApiResponse<T>.Fail()`)
 - **Códigos HTTP**: Verificar que os códigos HTTP corretos são retornados
+- **Estrutura ApiResponse**: Verificar `Success`, `Message` e `Content` nas assertions
+- **ToNamedContent**: O `Content` vem formatado com ToNamedContent (Dictionary<string, object>)
 
 ## Como testar
 - Executar `dotnet test` no projeto de testes

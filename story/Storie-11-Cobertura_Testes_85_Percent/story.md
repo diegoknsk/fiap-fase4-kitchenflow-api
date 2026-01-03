@@ -183,21 +183,50 @@ FastFood.KitchenFlow.Tests.Unit/
 ```
 
 **Exemplos:**
-- `CreatePreparation_WhenValidInput_ShouldReturnSuccess`
+- `CreatePreparation_WhenValidInput_ShouldReturnApiResponseSuccess`
 - `CreatePreparation_WhenOrderIdIsEmpty_ShouldThrowArgumentException`
 - `CreatePreparation_WhenPreparationAlreadyExists_ShouldThrowPreparationAlreadyExistsException`
 - `StartPreparation_WhenStatusIsNotReceived_ShouldThrowInvalidOperationException`
+- `CreatePreparation_WhenValidRequest_ShouldReturn201Created` (Controller)
+
+### Padrão ApiResponse<T>
+**IMPORTANTE**: Todos os UseCases e Controllers foram refatorados para usar `ApiResponse<T>` (Story 12). Os testes devem refletir este padrão:
+
+1. **UseCases retornam `ApiResponse<T>`**:
+   - UseCases chamam Presenters que retornam `ApiResponse<T>`
+   - UseCases retornam `ApiResponse<T>` diretamente (não Response models simples)
+   - Mensagens de sucesso são definidas nos Presenters
+
+2. **Controllers recebem `ApiResponse<T>` do Use Case**:
+   - Controllers recebem `ApiResponse<T>` do Use Case e retornam diretamente
+   - Para erros (exceções), Controllers criam `ApiResponse<T>.Fail()` com mensagem da exceção
+   - Controllers não criam mensagens de sucesso (vêm dos Presenters via Use Cases)
+
+3. **Estrutura de `ApiResponse<T>`**:
+   - `Success`: boolean indicando sucesso/falha
+   - `Message`: string com mensagem descritiva
+   - `Content`: objeto formatado com ToNamedContent (Dictionary<string, object>)
+
+4. **Testes de UseCases**:
+   - Verificar que retornam `ApiResponse<T>`
+   - Verificar `Success`, `Message` e `Content`
+   - `Content` vem como `Dictionary<string, object>` devido ao ToNamedContent
+
+5. **Testes de Controllers**:
+   - Mockar UseCases retornando `ApiResponse<T>`
+   - Verificar estrutura do `ApiResponse<T>` retornado
+   - Para erros, verificar que Controller cria `ApiResponse<T>.Fail()`
 
 ### Padrão AAA (Arrange, Act, Assert)
 Todos os testes devem seguir este padrão:
 
 ```csharp
 [Fact]
-public void CreatePreparation_WhenValidInput_ShouldReturnSuccess()
+public async Task CreatePreparation_WhenValidInput_ShouldReturnApiResponseSuccess()
 {
     // Arrange
     var orderId = Guid.NewGuid();
-    var orderSnapshot = "{ ... }";
+    var orderSnapshot = $"""{{"orderId":"{orderId}","orderCode":"ORD-001","totalPrice":50.00,"items":[]}}""";
     var mockRepository = new Mock<IPreparationRepository>();
     mockRepository.Setup(r => r.GetByOrderIdAsync(It.IsAny<Guid>()))
         .ReturnsAsync((Preparation?)null);
@@ -216,9 +245,11 @@ public void CreatePreparation_WhenValidInput_ShouldReturnSuccess()
     
     // Assert
     result.Should().NotBeNull();
-    result.Id.Should().NotBeEmpty();
-    result.OrderId.Should().Be(orderId);
-    result.Status.Should().Be((int)EnumPreparationStatus.Received);
+    result.Should().BeOfType<ApiResponse<CreatePreparationResponse>>();
+    result.Success.Should().BeTrue();
+    result.Message.Should().Be("Preparação criada com sucesso.");
+    result.Content.Should().NotBeNull();
+    result.Content.Should().BeOfType<Dictionary<string, object>>();
     mockRepository.Verify(r => r.CreateAsync(It.IsAny<Preparation>()), Times.Once);
 }
 ```
