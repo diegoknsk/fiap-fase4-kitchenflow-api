@@ -55,48 +55,48 @@ Criar a camada de persistência completa no projeto `FastFood.KitchenFlow.Infra.
 
 ## Subtasks
 
-- [ ] [Subtask 01: Configurar dependências EF Core e Npgsql](./subtask/Subtask-01-Configurar_dependencias_EF.md)
-- [ ] [Subtask 02: Criar entidades de persistência (PreparationEntity, DeliveryEntity)](./subtask/Subtask-02-Criar_entidades_persistencia.md)
-- [ ] [Subtask 03: Criar configurações de mapeamento (EntityTypeConfiguration)](./subtask/Subtask-03-Criar_configuracoes_mapeamento.md)
-- [ ] [Subtask 04: Criar DbContext (KitchenFlowDbContext)](./subtask/Subtask-04-Criar_DbContext.md)
-- [ ] [Subtask 05: Configurar DbContext no Program.cs da API](./subtask/Subtask-05-Configurar_DbContext_API.md)
-- [ ] [Subtask 06: Criar migration inicial (Preparations + Deliveries + FK)](./subtask/Subtask-06-Criar_migration_inicial.md)
-- [ ] [Subtask 07: Validar estrutura de persistência](./subtask/Subtask-07-Validar_persistencia.md)
+- [x] [Subtask 01: Configurar dependências EF Core e Npgsql](./subtask/Subtask-01-Configurar_dependencias_EF.md)
+- [x] [Subtask 02: Criar entidades de persistência (PreparationEntity, DeliveryEntity)](./subtask/Subtask-02-Criar_entidades_persistencia.md)
+- [x] [Subtask 03: Criar configurações de mapeamento (EntityTypeConfiguration)](./subtask/Subtask-03-Criar_configuracoes_mapeamento.md)
+- [x] [Subtask 04: Criar DbContext (KitchenFlowDbContext)](./subtask/Subtask-04-Criar_DbContext.md)
+- [x] [Subtask 05: Configurar DbContext no Program.cs da API](./subtask/Subtask-05-Configurar_DbContext_API.md)
+- [x] [Subtask 06: Criar migration inicial (Preparations + Deliveries + FK)](./subtask/Subtask-06-Criar_migration_inicial.md)
+- [x] [Subtask 07: Validar estrutura de persistência](./subtask/Subtask-07-Validar_persistencia.md)
 
 ## Critérios de Aceite da História
 
-- [ ] Projeto `FastFood.KitchenFlow.Infra.Persistence` possui dependências:
+- [x] Projeto `FastFood.KitchenFlow.Infra.Persistence` possui dependências:
   - `Microsoft.EntityFrameworkCore`
   - `Npgsql.EntityFrameworkCore.PostgreSQL`
   - Referência a `FastFood.KitchenFlow.Domain`
-- [ ] Entidade `PreparationEntity` criada em `Entities/PreparationEntity.cs`:
+- [x] Entidade `PreparationEntity` criada em `Entities/PreparationEntity.cs`:
   - Propriedades: `Id`, `OrderId`, `Status`, `CreatedAt`, `OrderSnapshot`
   - `OrderSnapshot` como `string` (será mapeado para jsonb)
-- [ ] Entidade `DeliveryEntity` criada em `Entities/DeliveryEntity.cs`:
+- [x] Entidade `DeliveryEntity` criada em `Entities/DeliveryEntity.cs`:
   - Propriedades: `Id`, `PreparationId`, `OrderId` (nullable), `Status`, `CreatedAt`, `FinalizedAt`
-- [ ] Configuração `PreparationConfiguration` criada:
+- [x] Configuração `PreparationConfiguration` criada:
   - Mapeia para tabela `Preparations`
   - `OrderSnapshot` configurado como `jsonb` no PostgreSQL
   - Índice em `OrderId`
-- [ ] Configuração `DeliveryConfiguration` criada:
+- [x] Configuração `DeliveryConfiguration` criada:
   - Mapeia para tabela `Deliveries`
   - FK `PreparationId` → `Preparations.Id` configurada
   - Índices em `PreparationId` e `OrderId` (se necessário)
-- [ ] `KitchenFlowDbContext` criado:
+- [x] `KitchenFlowDbContext` criado:
   - DbSet para `PreparationEntity` e `DeliveryEntity`
   - Configurações aplicadas via `ApplyConfigurationsFromAssembly` ou manualmente
-- [ ] DbContext configurado no `Program.cs` da API:
+- [x] DbContext configurado no `Program.cs` da API:
   - Connection string lida de `appsettings.json`
   - `AddDbContext<KitchenFlowDbContext>` configurado
   - Connection string: `Host=localhost;Port=4433;Database=dbKitchenLocal;Username=postgres;Password=postgres`
-- [ ] Migration inicial criada:
+- [x] Migration inicial criada:
   - Tabela `Preparations` com todas as colunas
   - Tabela `Deliveries` com todas as colunas
   - FK `Delivery.PreparationId` → `Preparation.Id`
   - Tipo `jsonb` para `OrderSnapshot`
   - Índices criados
-- [ ] Projeto compila sem erros
-- [ ] Estrutura segue padrão do projeto Auth (Entities, Configurations, DbContext, Migrations)
+- [x] Projeto compila sem erros
+- [x] Estrutura segue padrão do projeto Auth (Entities, Configurations, DbContext, Migrations)
 
 ## Observações Arquiteturais
 

@@ -96,44 +96,44 @@ Criar as entidades de domínio `Preparation` e `Delivery` no projeto `FastFood.K
 
 ## Subtasks
 
-- [ ] [Subtask 01: Criar estrutura de pastas e enums no Domain](./subtask/Subtask-01-Criar_estrutura_pastas_enums.md)
-- [ ] [Subtask 02: Criar entidade Preparation com validações](./subtask/Subtask-02-Criar_entidade_Preparation.md)
-- [ ] [Subtask 03: Criar entidade Delivery com validações](./subtask/Subtask-03-Criar_entidade_Delivery.md)
-- [ ] [Subtask 04: Criar exceções de domínio (se necessário)](./subtask/Subtask-04-Criar_excecoes_dominio.md)
-- [ ] [Subtask 05: Criar testes unitários para entidades](./subtask/Subtask-05-Criar_testes_entidades.md)
-- [ ] [Subtask 06: Validar compilação e estrutura de domínio](./subtask/Subtask-06-Validar_dominio.md)
+- [x] [Subtask 01: Criar estrutura de pastas e enums no Domain](./subtask/Subtask-01-Criar_estrutura_pastas_enums.md)
+- [x] [Subtask 02: Criar entidade Preparation com validações](./subtask/Subtask-02-Criar_entidade_Preparation.md)
+- [x] [Subtask 03: Criar entidade Delivery com validações](./subtask/Subtask-03-Criar_entidade_Delivery.md)
+- [x] [Subtask 04: Criar exceções de domínio (se necessário)](./subtask/Subtask-04-Criar_excecoes_dominio.md)
+- [x] [Subtask 05: Criar testes unitários para entidades](./subtask/Subtask-05-Criar_testes_entidades.md)
+- [x] [Subtask 06: Validar compilação e estrutura de domínio](./subtask/Subtask-06-Validar_dominio.md)
 
 ## Critérios de Aceite da História
 
-- [ ] Estrutura de pastas criada em `FastFood.KitchenFlow.Domain`:
+- [x] Estrutura de pastas criada em `FastFood.KitchenFlow.Domain`:
   - `Entities/PreparationManagement/` com `Preparation.cs`
   - `Entities/DeliveryManagement/` com `Delivery.cs`
   - `Common/Enums/` com `EnumPreparationStatus.cs` e `EnumDeliveryStatus.cs`
   - `Common/Exceptions/` (se necessário para exceções de domínio)
-- [ ] Entidade `Preparation` criada com:
+- [x] Entidade `Preparation` criada com:
   - Propriedades: `Id`, `OrderId`, `Status`, `CreatedAt`, `OrderSnapshot`
   - Métodos: `Create()`, `StartPreparation()`, `FinishPreparation()`
   - Validações de negócio implementadas
-- [ ] Entidade `Delivery` criada com:
+- [x] Entidade `Delivery` criada com:
   - Propriedades: `Id`, `PreparationId`, `OrderId` (opcional), `Status`, `CreatedAt`, `FinalizedAt`
   - Métodos: `Create()`, `FinalizeDelivery()`
   - Validações de negócio implementadas
-- [ ] Enums criados com valores corretos:
+- [x] Enums criados com valores corretos:
   - `EnumPreparationStatus`: `Received = 0`, `InProgress = 1`, `Finished = 2`
   - `EnumDeliveryStatus`: `ReadyForPickup = 1`, `Finalized = 2`
-- [ ] Validações de transição de status implementadas:
+- [x] Validações de transição de status implementadas:
   - Preparation: `Received` → `InProgress` → `Finished`
   - Delivery: `ReadyForPickup` → `Finalized`
   - Exceções lançadas para transições inválidas
-- [ ] Testes unitários criados cobrindo:
+- [x] Testes unitários criados cobrindo:
   - Criação de entidades
   - Transições de status válidas
   - Transições de status inválidas (deve lançar exceção)
   - Validações de propriedades obrigatórias
-- [ ] Projeto Domain compila sem erros
-- [ ] Nenhuma dependência externa no projeto Domain (EF Core, ASP.NET, etc.)
-- [ ] Código segue padrão do projeto de referência (OrderHub)
-- [ ] Testes unitários passando (`dotnet test`)
+- [x] Projeto Domain compila sem erros
+- [x] Nenhuma dependência externa no projeto Domain (EF Core, ASP.NET, etc.)
+- [x] Código segue padrão do projeto de referência (OrderHub)
+- [x] Testes unitários passando (`dotnet test`)
 
 ## Observações Arquiteturais
 
