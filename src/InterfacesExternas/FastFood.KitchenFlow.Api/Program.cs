@@ -1,4 +1,5 @@
 using FastFood.KitchenFlow.Application.Ports;
+using FastFood.KitchenFlow.Application.UseCases.DeliveryManagement;
 using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
 using FastFood.KitchenFlow.Infra.Persistence;
 using FastFood.KitchenFlow.Infra.Persistence.Repositories;
@@ -19,6 +20,12 @@ builder.Services.AddDbContext<KitchenFlowDbContext>(options =>
 // Configure Dependency Injection
 builder.Services.AddScoped<IPreparationRepository, PreparationRepository>();
 builder.Services.AddScoped<CreatePreparationUseCase>();
+
+// Delivery
+builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
+builder.Services.AddScoped<CreateDeliveryUseCase>();
+builder.Services.AddScoped<GetReadyDeliveriesUseCase>();
+builder.Services.AddScoped<FinalizeDeliveryUseCase>();
 
 var app = builder.Build();
 

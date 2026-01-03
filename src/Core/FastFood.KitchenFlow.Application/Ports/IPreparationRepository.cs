@@ -22,4 +22,11 @@ public interface IPreparationRepository
     /// <param name="orderId">Identificador do pedido.</param>
     /// <returns>Preparation encontrada ou null se não existir.</returns>
     Task<Preparation?> GetByOrderIdAsync(Guid orderId);
+
+    /// <summary>
+    /// Busca uma preparação pelo Id.
+    /// </summary>
+    /// <param name="id">Identificador da preparação.</param>
+    /// <returns>Preparation encontrada ou null se não existir.</returns>
+    Task<Preparation?> GetByIdAsync(Guid id);
 }

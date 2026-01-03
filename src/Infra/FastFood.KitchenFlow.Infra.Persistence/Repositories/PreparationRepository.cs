@@ -46,6 +46,20 @@ public class PreparationRepository : IPreparationRepository
         return ToDomain(entity);
     }
 
+    /// <inheritdoc />
+    public async Task<Preparation?> GetByIdAsync(Guid id)
+    {
+        var entity = await _context.Preparations
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (entity == null)
+        {
+            return null;
+        }
+
+        return ToDomain(entity);
+    }
+
     /// <summary>
     /// Mapeia entidade de domínio para entidade de persistência.
     /// </summary>
