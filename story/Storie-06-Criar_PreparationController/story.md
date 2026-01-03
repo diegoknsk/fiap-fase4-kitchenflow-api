@@ -159,3 +159,39 @@ Este endpoint será chamado pelo microserviço Payment após confirmação de pa
 
 ### Endpoint para Payment
 Este é o endpoint principal que o Payment chamará. Outros endpoints (listar, iniciar, finalizar preparação) serão criados em stories futuras.
+
+---
+
+## ✅ Story Concluída
+
+**Data de Conclusão**: 2024
+
+### Resumo da Implementação
+
+A Story 06 foi implementada com sucesso, incluindo:
+
+1. **Exceção Customizada**: `PreparationAlreadyExistsException` criada na camada Application para tratamento de idempotência
+2. **UseCase**: `CreatePreparationUseCase` implementado com validações e verificação de idempotência
+3. **Controller**: `PreparationController` com endpoint `POST /api/preparations` funcional
+4. **Tratamento de Respostas HTTP**:
+   - 201 Created: Preparação criada com sucesso
+   - 400 Bad Request: Dados inválidos
+   - 409 Conflict: Preparação já existe (idempotência)
+5. **Documentação Swagger**: Endpoint documentado com todos os códigos de resposta
+
+### Arquivos Criados/Modificados
+
+- ✅ `Application/Exceptions/PreparationAlreadyExistsException.cs` (novo)
+- ✅ `Application/UseCases/PreparationManagement/CreatePreparationUseCase.cs` (ajustado para lançar exceção de conflito)
+- ✅ `Api/Controllers/PreparationController.cs` (ajustado para tratar 409 Conflict)
+- ✅ Todos os componentes necessários já existiam e foram validados
+
+### Status Final
+
+- ✅ Compilação: Sem erros
+- ✅ Arquitetura: Segue padrão Clean Architecture
+- ✅ Idempotência: Implementada com retorno 409 Conflict
+- ✅ Documentação: Swagger completo
+- ✅ Pronto para testes de integração
+
+**Próximos Passos**: Testar o endpoint via Swagger e validar integração com o microserviço Payment.

@@ -1,4 +1,5 @@
 using FastFood.KitchenFlow.Api.Models.PreparationManagement;
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
 using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
@@ -31,9 +32,11 @@ public class PreparationController : ControllerBase
     /// <returns>Response com os dados da preparação criada.</returns>
     /// <response code="201">Preparação criada com sucesso.</response>
     /// <response code="400">Dados inválidos.</response>
+    /// <response code="409">Preparação já existe para este pedido (idempotência).</response>
     [HttpPost]
     [ProducesResponseType(typeof(CreatePreparationResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreatePreparation([FromBody] CreatePreparationRequest request)
     {
         if (!ModelState.IsValid)
@@ -58,6 +61,10 @@ public class PreparationController : ControllerBase
                 nameof(CreatePreparation),
                 new { id = response.Id },
                 response);
+        }
+        catch (PreparationAlreadyExistsException ex)
+        {
+            return Conflict(new { message = ex.Message, orderId = ex.OrderId });
         }
         catch (ArgumentException ex)
         {

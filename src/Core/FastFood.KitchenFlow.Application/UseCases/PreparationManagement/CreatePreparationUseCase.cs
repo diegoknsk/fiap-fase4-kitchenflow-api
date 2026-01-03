@@ -1,3 +1,4 @@
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Ports;
@@ -29,7 +30,7 @@ public class CreatePreparationUseCase
     /// <param name="inputModel">Dados de entrada para criação da preparação.</param>
     /// <returns>Response com os dados da preparação criada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
-    /// <exception cref="InvalidOperationException">Lançada quando já existe uma preparação para o OrderId (idempotência).</exception>
+    /// <exception cref="PreparationAlreadyExistsException">Lançada quando já existe uma preparação para o OrderId (idempotência).</exception>
     public async Task<CreatePreparationResponse> ExecuteAsync(CreatePreparationInputModel inputModel)
     {
         // Validar InputModel
@@ -47,16 +48,8 @@ public class CreatePreparationUseCase
         var existingPreparation = await _repository.GetByOrderIdAsync(inputModel.OrderId);
         if (existingPreparation != null)
         {
-            // Retornar dados existentes (mais resiliente que retornar erro)
-            var outputModel = new CreatePreparationOutputModel
-            {
-                Id = existingPreparation.Id,
-                OrderId = existingPreparation.OrderId,
-                Status = (int)existingPreparation.Status,
-                CreatedAt = existingPreparation.CreatedAt
-            };
-
-            return CreatePreparationPresenter.Present(outputModel);
+            // Lançar exceção para indicar conflito (409 Conflict)
+            throw new PreparationAlreadyExistsException(inputModel.OrderId);
         }
 
         // Criar entidade de domínio
