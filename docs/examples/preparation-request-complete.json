@@ -1,0 +1,52 @@
+{
+  "orderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "orderSnapshot": {
+    "orderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "orderCode": "ORD-2024-001",
+    "customerId": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+    "totalPrice": 45.50,
+    "createdAt": "2024-01-01T10:00:00Z",
+    "items": [
+      {
+        "productId": "3fa85f64-5717-4562-b3fc-2c963f66afa8",
+        "productName": "Hambúrguer Clássico",
+        "quantity": 2,
+        "unitPrice": 15.00,
+        "finalPrice": 30.00,
+        "ingredients": [
+          {
+            "name": "Pão",
+            "price": 0.00,
+            "quantity": 1
+          },
+          {
+            "name": "Queijo Extra",
+            "price": 2.50,
+            "quantity": 1
+          }
+        ],
+        "observation": "Sem cebola"
+      },
+      {
+        "productId": "3fa85f64-5717-4562-b3fc-2c963f66afb0",
+        "productName": "Batata Frita Grande",
+        "quantity": 1,
+        "unitPrice": 12.00,
+        "finalPrice": 12.00,
+        "ingredients": [],
+        "observation": null
+      },
+      {
+        "productId": "3fa85f64-5717-4562-b3fc-2c963f66afb1",
+        "productName": "Refrigerante 500ml",
+        "quantity": 1,
+        "unitPrice": 3.50,
+        "finalPrice": 3.50,
+        "ingredients": null,
+        "observation": "Gelo extra"
+      }
+    ],
+    "paymentId": "3fa85f64-5717-4562-b3fc-2c963f66afa9",
+    "paidAt": "2024-01-01T10:05:00Z"
+  }
+}

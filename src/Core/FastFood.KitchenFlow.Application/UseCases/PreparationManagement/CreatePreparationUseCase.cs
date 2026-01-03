@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using FastFood.KitchenFlow.Application.DTOs;
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
@@ -42,6 +45,47 @@ public class CreatePreparationUseCase
         if (string.IsNullOrWhiteSpace(inputModel.OrderSnapshot))
         {
             throw new ArgumentException("OrderSnapshot não pode ser nulo ou vazio.", nameof(inputModel));
+        }
+
+        // Validar estrutura do OrderSnapshot (deserializar e validar)
+        OrderSnapshotDto? orderSnapshotDto;
+        try
+        {
+            orderSnapshotDto = JsonSerializer.Deserialize<OrderSnapshotDto>(
+                inputModel.OrderSnapshot,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"OrderSnapshot contém JSON inválido: {ex.Message}", nameof(inputModel));
+        }
+
+        if (orderSnapshotDto == null)
+        {
+            throw new ArgumentException("OrderSnapshot não pode ser deserializado.", nameof(inputModel));
+        }
+
+        // Validar estrutura usando Data Annotations
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(orderSnapshotDto);
+        bool isValid = Validator.TryValidateObject(orderSnapshotDto, validationContext, validationResults, true);
+
+        if (!isValid)
+        {
+            var errors = validationResults
+                .SelectMany(r => r.MemberNames.Select(m => $"{m}: {r.ErrorMessage}"))
+                .ToList();
+            throw new ArgumentException(
+                $"OrderSnapshot contém dados inválidos: {string.Join("; ", errors)}",
+                nameof(inputModel));
+        }
+
+        // Validar que OrderId do snapshot corresponde ao OrderId do input
+        if (orderSnapshotDto.OrderId != inputModel.OrderId)
+        {
+            throw new ArgumentException(
+                $"OrderId do OrderSnapshot ({orderSnapshotDto.OrderId}) não corresponde ao OrderId informado ({inputModel.OrderId}).",
+                nameof(inputModel));
         }
 
         // Verificar idempotência (não criar duplicado)

@@ -1,0 +1,19 @@
+{
+  "orderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "orderSnapshot": {
+    "orderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "totalPrice": 15.00,
+    "createdAt": "2024-01-01T10:00:00Z",
+    "items": [
+      {
+        "productId": "3fa85f64-5717-4562-b3fc-2c963f66afa8",
+        "productName": "Hambúrguer Clássico",
+        "quantity": 1,
+        "unitPrice": 15.00,
+        "finalPrice": 15.00
+      }
+    ],
+    "paymentId": "3fa85f64-5717-4562-b3fc-2c963f66afa9",
+    "paidAt": "2024-01-01T10:05:00Z"
+  }
+}
