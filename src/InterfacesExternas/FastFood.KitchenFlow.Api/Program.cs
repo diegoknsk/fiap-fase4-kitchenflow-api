@@ -20,6 +20,9 @@ builder.Services.AddDbContext<KitchenFlowDbContext>(options =>
 // Configure Dependency Injection
 builder.Services.AddScoped<IPreparationRepository, PreparationRepository>();
 builder.Services.AddScoped<CreatePreparationUseCase>();
+builder.Services.AddScoped<GetPreparationsUseCase>();
+builder.Services.AddScoped<StartPreparationUseCase>();
+builder.Services.AddScoped<FinishPreparationUseCase>();
 
 // Delivery
 builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();

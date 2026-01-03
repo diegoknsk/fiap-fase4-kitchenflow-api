@@ -29,4 +29,20 @@ public interface IPreparationRepository
     /// <param name="id">Identificador da preparação.</param>
     /// <returns>Preparation encontrada ou null se não existir.</returns>
     Task<Preparation?> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Busca preparações com paginação e filtro opcional por status.
+    /// </summary>
+    /// <param name="pageNumber">Número da página (começando em 1).</param>
+    /// <param name="pageSize">Tamanho da página.</param>
+    /// <param name="status">Filtro opcional por status (null = sem filtro).</param>
+    /// <returns>Tupla contendo a lista de preparações e o total de registros.</returns>
+    Task<(IEnumerable<Preparation> preparations, int totalCount)> GetPagedAsync(int pageNumber, int pageSize, int? status);
+
+    /// <summary>
+    /// Atualiza uma preparação existente no banco de dados.
+    /// </summary>
+    /// <param name="preparation">Entidade de domínio Preparation a ser atualizada.</param>
+    /// <returns>Task que representa a operação assíncrona.</returns>
+    Task UpdateAsync(Preparation preparation);
 }

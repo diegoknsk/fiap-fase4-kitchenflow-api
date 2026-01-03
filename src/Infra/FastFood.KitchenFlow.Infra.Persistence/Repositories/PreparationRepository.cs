@@ -60,6 +60,53 @@ public class PreparationRepository : IPreparationRepository
         return ToDomain(entity);
     }
 
+    /// <inheritdoc />
+    public async Task<(IEnumerable<Preparation> preparations, int totalCount)> GetPagedAsync(int pageNumber, int pageSize, int? status)
+    {
+        var query = _context.Preparations.AsQueryable();
+
+        // Aplicar filtro por status se fornecido
+        if (status.HasValue)
+        {
+            query = query.Where(p => p.Status == status.Value);
+        }
+
+        // Contar total de registros (com filtro aplicado)
+        var totalCount = await query.CountAsync();
+
+        // Aplicar paginação
+        var entities = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        // Mapear para entidades de domínio
+        var preparations = entities.Select(ToDomain).ToList();
+
+        return (preparations, totalCount);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateAsync(Preparation preparation)
+    {
+        var entity = await _context.Preparations
+            .FirstOrDefaultAsync(p => p.Id == preparation.Id);
+
+        if (entity == null)
+        {
+            throw new InvalidOperationException($"Preparação {preparation.Id} não encontrada para atualização.");
+        }
+
+        // Atualizar propriedades
+        entity.Status = (int)preparation.Status;
+        entity.OrderId = preparation.OrderId;
+        entity.CreatedAt = preparation.CreatedAt;
+        entity.OrderSnapshot = preparation.OrderSnapshot;
+
+        await _context.SaveChangesAsync();
+    }
+
     /// <summary>
     /// Mapeia entidade de domínio para entidade de persistência.
     /// </summary>
