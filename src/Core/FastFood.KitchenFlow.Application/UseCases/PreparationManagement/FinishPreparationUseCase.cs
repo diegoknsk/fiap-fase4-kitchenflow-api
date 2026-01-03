@@ -1,5 +1,6 @@
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.PreparationManagement;
@@ -28,11 +29,11 @@ public class FinishPreparationUseCase
     /// Executa a finalização de uma preparação.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para finalizar a preparação.</param>
-    /// <returns>Response com os dados da preparação finalizada.</returns>
+    /// <returns>ApiResponse com os dados da preparação finalizada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="PreparationNotFoundException">Lançada quando a preparação não é encontrada.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite finalizar a preparação.</exception>
-    public async Task<FinishPreparationResponse> ExecuteAsync(FinishPreparationInputModel inputModel)
+    public async Task<ApiResponse<FinishPreparationResponse>> ExecuteAsync(FinishPreparationInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel.Id == Guid.Empty)

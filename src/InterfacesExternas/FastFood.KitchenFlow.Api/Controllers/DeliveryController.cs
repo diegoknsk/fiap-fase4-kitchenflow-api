@@ -1,6 +1,8 @@
+using System.Text.Json;
 using FastFood.KitchenFlow.Api.Models.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.DeliveryManagement;
 using FastFood.KitchenFlow.Application.UseCases.DeliveryManagement;
 using Microsoft.AspNetCore.Mvc;
@@ -38,19 +40,19 @@ public class DeliveryController : ControllerBase
     /// Cria uma nova entrega quando uma preparação for finalizada.
     /// </summary>
     /// <param name="request">Dados da entrega (PreparationId e OrderId opcional).</param>
-    /// <returns>Response com os dados da entrega criada.</returns>
+    /// <returns>ApiResponse com os dados da entrega criada.</returns>
     /// <response code="201">Entrega criada com sucesso.</response>
     /// <response code="400">Dados inválidos, Preparation não encontrada ou não está finalizada.</response>
     /// <response code="409">Entrega já existe para esta Preparation (idempotência).</response>
     [HttpPost]
-    [ProducesResponseType(typeof(CreateDeliveryResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<CreateDeliveryResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateDelivery([FromBody] CreateDeliveryRequest request)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(ApiResponse<CreateDeliveryResponse>.Fail("Dados inválidos."));
         }
 
         try
@@ -62,34 +64,44 @@ public class DeliveryController : ControllerBase
                 OrderId = request.OrderId
             };
 
-            // Chamar UseCase
-            var response = await _createDeliveryUseCase.ExecuteAsync(inputModel);
+            // Chamar UseCase (já retorna ApiResponse<T>)
+            var apiResponse = await _createDeliveryUseCase.ExecuteAsync(inputModel);
+
+            // Extrair o Id do Content para o CreatedAtAction
+            Guid id = Guid.Empty;
+            if (apiResponse.Content is Dictionary<string, object> contentDict &&
+                contentDict.TryGetValue("createDelivery", out var contentObj))
+            {
+                var json = JsonSerializer.Serialize(contentObj);
+                var response = JsonSerializer.Deserialize<CreateDeliveryResponse>(json);
+                id = response?.Id ?? Guid.Empty;
+            }
 
             // Retornar HTTP 201 Created
             return CreatedAtAction(
                 nameof(CreateDelivery),
-                new { id = response.Id },
-                response);
+                new { id },
+                apiResponse);
         }
         catch (DeliveryAlreadyExistsException ex)
         {
-            return Conflict(new { message = ex.Message, preparationId = ex.PreparationId });
+            return Conflict(ApiResponse<CreateDeliveryResponse>.Fail(ex.Message));
         }
         catch (PreparationNotFoundException ex)
         {
-            return BadRequest(new { message = ex.Message, preparationId = ex.PreparationId });
+            return BadRequest(ApiResponse<CreateDeliveryResponse>.Fail(ex.Message));
         }
         catch (PreparationNotFinishedException ex)
         {
-            return BadRequest(new { message = ex.Message, preparationId = ex.PreparationId, currentStatus = ex.CurrentStatus });
+            return BadRequest(ApiResponse<CreateDeliveryResponse>.Fail(ex.Message));
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(ApiResponse<CreateDeliveryResponse>.Fail(ex.Message));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, new { message = "Erro interno do servidor.", error = ex.Message });
+            return StatusCode(500, ApiResponse<CreateDeliveryResponse>.Fail("Erro interno do servidor."));
         }
     }
 
@@ -98,10 +110,10 @@ public class DeliveryController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Número da página (default: 1).</param>
     /// <param name="pageSize">Tamanho da página (default: 10).</param>
-    /// <returns>Response com a lista de entregas prontas para retirada.</returns>
+    /// <returns>ApiResponse com a lista de entregas prontas para retirada.</returns>
     /// <response code="200">Lista de entregas prontas para retirada.</response>
     [HttpGet("ready")]
-    [ProducesResponseType(typeof(GetReadyDeliveriesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GetReadyDeliveriesResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReadyDeliveries(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
@@ -115,15 +127,15 @@ public class DeliveryController : ControllerBase
                 PageSize = pageSize
             };
 
-            // Chamar UseCase
-            var response = await _getReadyDeliveriesUseCase.ExecuteAsync(inputModel);
+            // Chamar UseCase (já retorna ApiResponse<T>)
+            var apiResponse = await _getReadyDeliveriesUseCase.ExecuteAsync(inputModel);
 
             // Retornar HTTP 200 OK
-            return Ok(response);
+            return Ok(apiResponse);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, new { message = "Erro interno do servidor.", error = ex.Message });
+            return StatusCode(500, ApiResponse<GetReadyDeliveriesResponse>.Fail("Erro interno do servidor."));
         }
     }
 
@@ -131,12 +143,12 @@ public class DeliveryController : ControllerBase
     /// Finaliza uma entrega (ReadyForPickup → Finalized).
     /// </summary>
     /// <param name="id">Identificador da entrega a ser finalizada.</param>
-    /// <returns>Response com os dados da entrega finalizada.</returns>
+    /// <returns>ApiResponse com os dados da entrega finalizada.</returns>
     /// <response code="200">Entrega finalizada com sucesso.</response>
     /// <response code="400">Entrega não encontrada ou status inválido.</response>
     /// <response code="404">Entrega não encontrada.</response>
     [HttpPost("{id}/finalize")]
-    [ProducesResponseType(typeof(FinalizeDeliveryResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<FinalizeDeliveryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> FinalizeDelivery([FromRoute] Guid id)
@@ -149,27 +161,27 @@ public class DeliveryController : ControllerBase
                 Id = id
             };
 
-            // Chamar UseCase
-            var response = await _finalizeDeliveryUseCase.ExecuteAsync(inputModel);
+            // Chamar UseCase (já retorna ApiResponse<T>)
+            var apiResponse = await _finalizeDeliveryUseCase.ExecuteAsync(inputModel);
 
             // Retornar HTTP 200 OK
-            return Ok(response);
+            return Ok(apiResponse);
         }
         catch (DeliveryNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message, deliveryId = ex.DeliveryId });
+            return NotFound(ApiResponse<FinalizeDeliveryResponse>.Fail(ex.Message));
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(ApiResponse<FinalizeDeliveryResponse>.Fail(ex.Message));
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(ApiResponse<FinalizeDeliveryResponse>.Fail(ex.Message));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, new { message = "Erro interno do servidor.", error = ex.Message });
+            return StatusCode(500, ApiResponse<FinalizeDeliveryResponse>.Fail("Erro interno do servidor."));
         }
     }
 }

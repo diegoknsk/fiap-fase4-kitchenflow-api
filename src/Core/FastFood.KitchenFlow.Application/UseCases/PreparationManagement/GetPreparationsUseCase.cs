@@ -1,4 +1,5 @@
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.PreparationManagement;
@@ -26,9 +27,9 @@ public class GetPreparationsUseCase
     /// Executa a listagem de preparações com paginação.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para listagem (paginação e filtros).</param>
-    /// <returns>Response com a lista paginada de preparações.</returns>
+    /// <returns>ApiResponse com a lista paginada de preparações.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
-    public async Task<GetPreparationsResponse> ExecuteAsync(GetPreparationsInputModel inputModel)
+    public async Task<ApiResponse<GetPreparationsResponse>> ExecuteAsync(GetPreparationsInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel.PageNumber < 1)

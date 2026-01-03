@@ -29,9 +29,4 @@ public class CreateDeliveryResponse
     /// Data e hora de criação da entrega.
     /// </summary>
     public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Mensagem de sucesso.
-    /// </summary>
-    public string Message { get; set; } = string.Empty;
 }

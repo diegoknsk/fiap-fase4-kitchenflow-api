@@ -3,6 +3,7 @@ using System.Text.Json;
 using FastFood.KitchenFlow.Application.DTOs;
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.PreparationManagement;
@@ -31,10 +32,10 @@ public class CreatePreparationUseCase
     /// Executa a criação de uma nova preparação.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para criação da preparação.</param>
-    /// <returns>Response com os dados da preparação criada.</returns>
+    /// <returns>ApiResponse com os dados da preparação criada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="PreparationAlreadyExistsException">Lançada quando já existe uma preparação para o OrderId (idempotência).</exception>
-    public async Task<CreatePreparationResponse> ExecuteAsync(CreatePreparationInputModel inputModel)
+    public async Task<ApiResponse<CreatePreparationResponse>> ExecuteAsync(CreatePreparationInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel.OrderId == Guid.Empty)

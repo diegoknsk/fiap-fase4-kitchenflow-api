@@ -1,5 +1,6 @@
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.PreparationManagement;
@@ -28,11 +29,11 @@ public class StartPreparationUseCase
     /// Executa o início de uma preparação.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para iniciar a preparação.</param>
-    /// <returns>Response com os dados da preparação iniciada.</returns>
+    /// <returns>ApiResponse com os dados da preparação iniciada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="PreparationNotFoundException">Lançada quando a preparação não é encontrada.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite iniciar a preparação.</exception>
-    public async Task<StartPreparationResponse> ExecuteAsync(StartPreparationInputModel inputModel)
+    public async Task<ApiResponse<StartPreparationResponse>> ExecuteAsync(StartPreparationInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel.Id == Guid.Empty)

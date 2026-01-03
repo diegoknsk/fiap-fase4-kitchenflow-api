@@ -1,4 +1,5 @@
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.DeliveryManagement;
@@ -26,8 +27,8 @@ public class GetReadyDeliveriesUseCase
     /// Executa a listagem de entregas prontas para retirada.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para listagem (paginação).</param>
-    /// <returns>Response com a lista de entregas prontas para retirada.</returns>
-    public async Task<GetReadyDeliveriesResponse> ExecuteAsync(GetReadyDeliveriesInputModel inputModel)
+    /// <returns>ApiResponse com a lista de entregas prontas para retirada.</returns>
+    public async Task<ApiResponse<GetReadyDeliveriesResponse>> ExecuteAsync(GetReadyDeliveriesInputModel inputModel)
     {
         // Validar parâmetros de paginação
         if (inputModel.PageNumber < 1)

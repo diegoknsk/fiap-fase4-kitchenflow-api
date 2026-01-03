@@ -1,5 +1,6 @@
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.DeliveryManagement;
@@ -34,12 +35,12 @@ public class CreateDeliveryUseCase
     /// Executa a criação de uma nova entrega.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para criação da entrega.</param>
-    /// <returns>Response com os dados da entrega criada.</returns>
+    /// <returns>ApiResponse com os dados da entrega criada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="PreparationNotFoundException">Lançada quando a preparação não é encontrada.</exception>
     /// <exception cref="PreparationNotFinishedException">Lançada quando a preparação não está com status Finished.</exception>
     /// <exception cref="DeliveryAlreadyExistsException">Lançada quando já existe uma entrega para a preparação (idempotência).</exception>
-    public async Task<CreateDeliveryResponse> ExecuteAsync(CreateDeliveryInputModel inputModel)
+    public async Task<ApiResponse<CreateDeliveryResponse>> ExecuteAsync(CreateDeliveryInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel.PreparationId == Guid.Empty)

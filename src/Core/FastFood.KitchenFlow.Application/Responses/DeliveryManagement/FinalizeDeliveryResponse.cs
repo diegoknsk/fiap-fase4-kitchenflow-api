@@ -34,9 +34,4 @@ public class FinalizeDeliveryResponse
     /// Data e hora de finalização da entrega.
     /// </summary>
     public DateTime? FinalizedAt { get; set; }
-
-    /// <summary>
-    /// Mensagem de sucesso.
-    /// </summary>
-    public string Message { get; set; } = string.Empty;
 }

@@ -1,5 +1,6 @@
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.DeliveryManagement;
@@ -28,11 +29,11 @@ public class FinalizeDeliveryUseCase
     /// Executa a finalização de uma entrega.
     /// </summary>
     /// <param name="inputModel">Dados de entrada para finalização da entrega.</param>
-    /// <returns>Response com os dados da entrega finalizada.</returns>
+    /// <returns>ApiResponse com os dados da entrega finalizada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="DeliveryNotFoundException">Lançada quando a entrega não é encontrada.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite a finalização.</exception>
-    public async Task<FinalizeDeliveryResponse> ExecuteAsync(FinalizeDeliveryInputModel inputModel)
+    public async Task<ApiResponse<FinalizeDeliveryResponse>> ExecuteAsync(FinalizeDeliveryInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel.Id == Guid.Empty)

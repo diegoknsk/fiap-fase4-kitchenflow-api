@@ -1,27 +1,28 @@
+using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
 
 namespace FastFood.KitchenFlow.Application.Presenters.PreparationManagement;
 
 /// <summary>
-/// Presenter que transforma FinishPreparationOutputModel em FinishPreparationResponse.
+/// Presenter que transforma FinishPreparationOutputModel em ApiResponse de FinishPreparationResponse.
 /// </summary>
 public static class FinishPreparationPresenter
 {
     /// <summary>
-    /// Transforma o OutputModel em Response adicionando a mensagem de sucesso.
+    /// Transforma o OutputModel em ApiResponse com mensagem de sucesso.
     /// </summary>
     /// <param name="outputModel">OutputModel retornado pelo UseCase.</param>
-    /// <returns>Response pronto para ser retornado pela API.</returns>
-    public static FinishPreparationResponse Present(FinishPreparationOutputModel outputModel)
+    /// <returns>ApiResponse pronto para ser retornado pela API.</returns>
+    public static ApiResponse<FinishPreparationResponse> Present(FinishPreparationOutputModel outputModel)
     {
-        return new FinishPreparationResponse
+        var response = new FinishPreparationResponse
         {
             Id = outputModel.Id,
             OrderId = outputModel.OrderId,
             Status = outputModel.Status,
-            CreatedAt = outputModel.CreatedAt,
-            Message = "Preparação finalizada com sucesso"
+            CreatedAt = outputModel.CreatedAt
         };
+        return ApiResponse<FinishPreparationResponse>.Ok(response, "Preparação finalizada com sucesso.");
     }
 }
