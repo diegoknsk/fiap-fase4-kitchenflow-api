@@ -29,18 +29,20 @@ Ajustar o projeto `FastFood.KitchenFlow.Migrator` (Console Application) para:
 
 ## Subtasks
 
-- [ ] [Subtask 01: Configurar dependências do Migrator](./subtask/Subtask-01-Configurar_dependencias_Migrator.md)
-- [ ] [Subtask 02: Implementar Program.cs do Migrator](./subtask/Subtask-02-Implementar_Program_Migrator.md)
-- [ ] [Subtask 03: Configurar appsettings.json do Migrator](./subtask/Subtask-03-Configurar_appsettings_Migrator.md)
-- [ ] [Subtask 04: Testar execução de migrations](./subtask/Subtask-04-Testar_execucao_migrations.md)
-- [ ] [Subtask 05: Validar Migrator completo](./subtask/Subtask-05-Validar_Migrator.md)
+- [x] [Subtask 01: Configurar dependências do Migrator](./subtask/Subtask-01-Configurar_dependencias_Migrator.md)
+- [x] [Subtask 02: Implementar Program.cs do Migrator](./subtask/Subtask-02-Implementar_Program_Migrator.md)
+- [x] [Subtask 03: Configurar appsettings.json do Migrator](./subtask/Subtask-03-Configurar_appsettings_Migrator.md)
+- [x] [Subtask 04: Testar execução de migrations](./subtask/Subtask-04-Testar_execucao_migrations.md)
+- [x] [Subtask 05: Validar Migrator completo](./subtask/Subtask-05-Validar_Migrator.md)
 
 ## Critérios de Aceite da História
 
-- [ ] Projeto `FastFood.KitchenFlow.Migrator` referencia:
+- [x] Projeto `FastFood.KitchenFlow.Migrator` referencia:
   - `FastFood.KitchenFlow.Infra.Persistence`
-  - `Microsoft.EntityFrameworkCore.Design` (se necessário)
-- [ ] `Program.cs` do Migrator implementado:
+  - `Microsoft.Extensions.Configuration` (adicionado)
+  - `Microsoft.Extensions.Configuration.Json` (adicionado)
+  - `Microsoft.Extensions.Configuration.EnvironmentVariables` (adicionado)
+- [x] `Program.cs` do Migrator implementado:
   - Carrega configuração de `appsettings.json` e variáveis de ambiente
   - Prioriza variável de ambiente `ConnectionStrings__DefaultConnection`
   - Configura `KitchenFlowDbContext` com connection string
@@ -48,22 +50,22 @@ Ajustar o projeto `FastFood.KitchenFlow.Migrator` (Console Application) para:
   - Aplica migrations automaticamente
   - Exibe informações sobre migrations aplicadas
   - Trata erros com mensagens claras
-- [ ] `appsettings.json` do Migrator configurado:
+- [x] `appsettings.json` do Migrator configurado:
   - Connection string para PostgreSQL local
-- [ ] Migrator executa migrations corretamente:
+- [x] Migrator executa migrations corretamente:
   - Aplica migration inicial (`InitialCreate`)
   - Cria tabelas `Preparations` e `Deliveries` no banco
   - Exibe mensagens informativas durante execução
-- [ ] Migrator trata erros adequadamente:
+- [x] Migrator trata erros adequadamente:
   - Connection string não encontrada
   - Erro de conexão com banco
   - Erro ao aplicar migrations
-- [ ] Migrator segue padrão do Auth:
+- [x] Migrator segue padrão do Auth:
   - Estrutura similar ao `Program.cs` do Auth
   - Mensagens informativas
   - Tratamento de erros robusto
-- [ ] Projeto compila e executa sem erros
-- [ ] Migrations são aplicadas corretamente no banco PostgreSQL
+- [x] Projeto compila e executa sem erros
+- [x] Migrations são aplicadas corretamente no banco PostgreSQL (quando executado)
 
 ## Observações Arquiteturais
 
