@@ -6,6 +6,17 @@ alwaysApply: true
 
 Este documento define o padrão completo para criação de histórias técnicas de infraestrutura no repositório.
 
+## ⚠️ REGRA OBRIGATÓRIA: Criação de Subtasks
+
+**Ao criar uma story, TODAS as subtasks listadas na seção "Subtasks" do `story.md` DEVEM ser criadas imediatamente como arquivos `.md` na pasta `subtask/`.**
+
+- ❌ **NÃO é permitido** criar uma story sem criar todas as subtasks correspondentes
+- ✅ **SEMPRE criar** todas as subtasks ao criar a story
+- ✅ Cada subtask deve ser um arquivo `.md` completo seguindo o formato definido neste documento
+- ✅ As subtasks devem estar prontas para implementação desde o momento da criação da story
+
+**Exemplo**: Se a story lista 8 subtasks na seção "Subtasks", todos os 8 arquivos `.md` devem ser criados na pasta `subtask/` imediatamente após criar o `story.md`.
+
 ## 📁 Estrutura de Pastas
 
 ### Nomenclatura da Pasta da História
@@ -47,7 +58,8 @@ Storie-XX-Descricao/
 
 **Regras:**
 - Sempre ter um arquivo `story.md` na raiz da pasta
-- Sempre ter uma pasta `subtask/` (mesmo que vazia inicialmente)
+- Sempre ter uma pasta `subtask/` com TODAS as subtasks criadas
+- **OBRIGATÓRIO**: Ao criar uma story, todas as subtasks listadas no `story.md` devem ser criadas imediatamente na pasta `subtask/`
 - Nenhum outro arquivo na raiz da pasta da história
 
 ## 📝 Formato do Arquivo story.md
@@ -118,6 +130,8 @@ Como [papel], quero [ação], para [benefício].
    - Ser específico, não genérico
 
 6. **Subtasks:**
+   - **CRIAÇÃO OBRIGATÓRIA**: Ao criar uma story, TODAS as subtasks devem ser criadas imediatamente na pasta `subtask/`
+   - **NÃO é permitido** criar uma story sem criar as subtasks correspondentes
    - Mínimo 3 subtasks, máximo 8 subtasks
    - Cada subtask deve ser uma ação específica e testável
    - Ordem deve fazer sentido lógico (dependências)
@@ -288,7 +302,7 @@ Antes de considerar uma história completa, verificar:
 - [ ] Pasta criada com nome no formato `Storie-XX-Descricao_Breve`
 - [ ] Arquivo `story.md` criado na raiz da pasta
 - [ ] Pasta `subtask/` criada
-- [ ] Todas as subtasks criadas na pasta `subtask/`
+- [ ] **TODAS as subtasks criadas na pasta `subtask/` (OBRIGATÓRIO)**
 
 ### Conteúdo do story.md
 - [ ] Status preenchido (Estado e Data de Conclusão quando aplicável)
