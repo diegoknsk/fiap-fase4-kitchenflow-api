@@ -21,7 +21,8 @@ public static class FinishPreparationPresenter
             Id = outputModel.Id,
             OrderId = outputModel.OrderId,
             Status = outputModel.Status,
-            CreatedAt = outputModel.CreatedAt
+            CreatedAt = outputModel.CreatedAt,
+            DeliveryId = outputModel.DeliveryId
         };
         return ApiResponse<FinishPreparationResponse>.Ok(response, "Preparação finalizada com sucesso.");
     }

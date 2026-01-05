@@ -1,4 +1,3 @@
-using FastFood.KitchenFlow.Api.Models.DeliveryManagement;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.DeliveryManagement;
@@ -14,55 +13,20 @@ namespace FastFood.KitchenFlow.Api.Controllers;
 [Route("api/[controller]")]
 public class DeliveryController : ControllerBase
 {
-    private readonly CreateDeliveryUseCase _createDeliveryUseCase;
     private readonly GetReadyDeliveriesUseCase _getReadyDeliveriesUseCase;
     private readonly FinalizeDeliveryUseCase _finalizeDeliveryUseCase;
 
     /// <summary>
     /// Construtor que recebe os UseCases via Dependency Injection.
     /// </summary>
-    /// <param name="createDeliveryUseCase">UseCase para criação de entregas.</param>
     /// <param name="getReadyDeliveriesUseCase">UseCase para listagem de entregas prontas.</param>
     /// <param name="finalizeDeliveryUseCase">UseCase para finalização de entregas.</param>
     public DeliveryController(
-        CreateDeliveryUseCase createDeliveryUseCase,
         GetReadyDeliveriesUseCase getReadyDeliveriesUseCase,
         FinalizeDeliveryUseCase finalizeDeliveryUseCase)
     {
-        _createDeliveryUseCase = createDeliveryUseCase;
         _getReadyDeliveriesUseCase = getReadyDeliveriesUseCase;
         _finalizeDeliveryUseCase = finalizeDeliveryUseCase;
-    }
-
-    /// <summary>
-    /// Cria uma nova entrega quando uma preparação for finalizada.
-    /// </summary>
-    /// <param name="request">Dados da entrega (PreparationId e OrderId opcional).</param>
-    /// <returns>ApiResponse com os dados da entrega criada.</returns>
-    /// <response code="201">Entrega criada com sucesso.</response>
-    /// <response code="400">Dados inválidos, Preparation não encontrada ou não está finalizada.</response>
-    /// <response code="409">Entrega já existe para esta Preparation (idempotência).</response>
-    [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<CreateDeliveryResponse>), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CreateDelivery([FromBody] CreateDeliveryRequest request)
-    {
-        try
-        {
-            var inputModel = new CreateDeliveryInputModel
-            {
-                PreparationId = request.PreparationId,
-                OrderId = request.OrderId
-            };
-
-            var result = await _createDeliveryUseCase.ExecuteAsync(inputModel);
-            return result.Success ? StatusCode(201, result) : BadRequest(result);
-        }
-        catch (Exception)
-        {
-            return BadRequest(ApiResponse<CreateDeliveryResponse>.Fail("Erro ao processar a requisição."));
-        }
     }
 
     /// <summary>

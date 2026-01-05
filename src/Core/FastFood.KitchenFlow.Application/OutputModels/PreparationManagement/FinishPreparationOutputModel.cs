@@ -24,4 +24,9 @@ public class FinishPreparationOutputModel
     /// Data e hora de criação da preparação.
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Identificador do delivery criado automaticamente quando a preparação foi finalizada.
+    /// </summary>
+    public Guid? DeliveryId { get; set; }
 }

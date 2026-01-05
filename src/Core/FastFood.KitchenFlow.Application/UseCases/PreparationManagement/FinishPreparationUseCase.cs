@@ -6,6 +6,7 @@ using FastFood.KitchenFlow.Application.Ports;
 using FastFood.KitchenFlow.Application.Presenters.PreparationManagement;
 using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
 using FastFood.KitchenFlow.Domain.Common.Enums;
+using FastFood.KitchenFlow.Domain.Entities.DeliveryManagement;
 
 namespace FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
 
@@ -15,14 +16,17 @@ namespace FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
 public class FinishPreparationUseCase
 {
     private readonly IPreparationRepository _repository;
+    private readonly IDeliveryRepository _deliveryRepository;
 
     /// <summary>
-    /// Construtor que recebe o repository via Dependency Injection.
+    /// Construtor que recebe os repositories via Dependency Injection.
     /// </summary>
     /// <param name="repository">Repository para acesso a dados de Preparation.</param>
-    public FinishPreparationUseCase(IPreparationRepository repository)
+    /// <param name="deliveryRepository">Repository para acesso a dados de Delivery.</param>
+    public FinishPreparationUseCase(IPreparationRepository repository, IDeliveryRepository deliveryRepository)
     {
         _repository = repository;
+        _deliveryRepository = deliveryRepository;
     }
 
     /// <summary>
@@ -66,13 +70,31 @@ public class FinishPreparationUseCase
         // Atualizar no banco
         await _repository.UpdateAsync(preparation);
 
+        // Criar delivery automaticamente (idempotência: verificar se já existe)
+        Delivery? delivery = await _deliveryRepository.GetByPreparationIdAsync(preparation.Id);
+        Guid? deliveryId = null;
+
+        if (delivery == null)
+        {
+            // Criar novo delivery
+            delivery = Delivery.Create(preparation.Id, preparation.OrderId);
+            await _deliveryRepository.CreateAsync(delivery);
+            deliveryId = delivery.Id;
+        }
+        else
+        {
+            // Usar delivery existente (idempotência)
+            deliveryId = delivery.Id;
+        }
+
         // Criar OutputModel
         var outputModel = new FinishPreparationOutputModel
         {
             Id = preparation.Id,
             OrderId = preparation.OrderId,
             Status = (int)preparation.Status,
-            CreatedAt = preparation.CreatedAt
+            CreatedAt = preparation.CreatedAt,
+            DeliveryId = deliveryId
         };
 
         // Chamar Presenter e retornar Response
