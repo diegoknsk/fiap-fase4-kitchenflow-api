@@ -38,14 +38,19 @@ public class CreatePreparationUseCase
     public async Task<ApiResponse<CreatePreparationResponse>> ExecuteAsync(CreatePreparationInputModel inputModel)
     {
         // Validar InputModel
+        if (inputModel == null)
+        {
+            throw new Exceptions.ValidationException("Dados de entrada não podem ser nulos.");
+        }
+
         if (inputModel.OrderId == Guid.Empty)
         {
-            throw new ArgumentException("OrderId não pode ser vazio.", nameof(inputModel));
+            throw new Exceptions.ValidationException("OrderId não pode ser vazio.");
         }
 
         if (string.IsNullOrWhiteSpace(inputModel.OrderSnapshot))
         {
-            throw new ArgumentException("OrderSnapshot não pode ser nulo ou vazio.", nameof(inputModel));
+            throw new Exceptions.ValidationException("OrderSnapshot não pode ser nulo ou vazio.");
         }
 
         // Validar estrutura do OrderSnapshot (deserializar e validar)
@@ -58,15 +63,15 @@ public class CreatePreparationUseCase
         }
         catch (JsonException ex)
         {
-            throw new ArgumentException($"OrderSnapshot contém JSON inválido: {ex.Message}", nameof(inputModel));
+            throw new Exceptions.ValidationException($"OrderSnapshot contém JSON inválido: {ex.Message}");
         }
 
         if (orderSnapshotDto == null)
         {
-            throw new ArgumentException("OrderSnapshot não pode ser deserializado.", nameof(inputModel));
+            throw new Exceptions.ValidationException("OrderSnapshot não pode ser deserializado.");
         }
 
-        // Validar estrutura usando Data Annotations
+        // Validar estrutura usando Data Annotations (validação relaxada - OrderSnapshot é apenas referência)
         var validationResults = new List<ValidationResult>();
         var validationContext = new ValidationContext(orderSnapshotDto);
         bool isValid = Validator.TryValidateObject(orderSnapshotDto, validationContext, validationResults, true);
@@ -76,18 +81,11 @@ public class CreatePreparationUseCase
             var errors = validationResults
                 .SelectMany(r => r.MemberNames.Select(m => $"{m}: {r.ErrorMessage}"))
                 .ToList();
-            throw new ArgumentException(
-                $"OrderSnapshot contém dados inválidos: {string.Join("; ", errors)}",
-                nameof(inputModel));
+            throw new Exceptions.ValidationException(
+                $"OrderSnapshot contém dados inválidos: {string.Join("; ", errors)}");
         }
 
-        // Validar que OrderId do snapshot corresponde ao OrderId do input
-        if (orderSnapshotDto.OrderId != inputModel.OrderId)
-        {
-            throw new ArgumentException(
-                $"OrderId do OrderSnapshot ({orderSnapshotDto.OrderId}) não corresponde ao OrderId informado ({inputModel.OrderId}).",
-                nameof(inputModel));
-        }
+        // Nota: Validação de correspondência de OrderId removida - OrderSnapshot é apenas referência
 
         // Verificar idempotência (não criar duplicado)
         var existingPreparation = await _repository.GetByOrderIdAsync(inputModel.OrderId);

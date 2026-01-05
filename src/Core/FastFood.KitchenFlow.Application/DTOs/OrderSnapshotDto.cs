@@ -10,10 +10,9 @@ namespace FastFood.KitchenFlow.Application.DTOs;
 public class OrderSnapshotDto
 {
     /// <summary>
-    /// Identificador do pedido.
+    /// Identificador do pedido (opcional - usado apenas como referência).
     /// </summary>
-    [Required(ErrorMessage = "OrderId é obrigatório.")]
-    public Guid OrderId { get; set; }
+    public Guid? OrderId { get; set; }
 
     /// <summary>
     /// Código do pedido (opcional).

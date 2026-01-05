@@ -27,28 +27,29 @@ public class StartPreparationUseCase
 
     /// <summary>
     /// Executa o início de uma preparação.
+    /// Busca automaticamente a preparação mais antiga com status Received e a inicia.
     /// </summary>
-    /// <param name="inputModel">Dados de entrada para iniciar a preparação.</param>
+    /// <param name="inputModel">Dados de entrada para iniciar a preparação (não requer parâmetros).</param>
     /// <returns>ApiResponse com os dados da preparação iniciada.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
-    /// <exception cref="PreparationNotFoundException">Lançada quando a preparação não é encontrada.</exception>
+    /// <exception cref="PreparationNotFoundException">Lançada quando não há preparação disponível.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite iniciar a preparação.</exception>
     public async Task<ApiResponse<StartPreparationResponse>> ExecuteAsync(StartPreparationInputModel inputModel)
     {
         // Validar InputModel
-        if (inputModel.Id == Guid.Empty)
+        if (inputModel == null)
         {
-            throw new ArgumentException("Id não pode ser vazio.", nameof(inputModel));
+            throw new ValidationException("Dados de entrada não podem ser nulos.");
         }
 
-        // Buscar Preparation
-        var preparation = await _repository.GetByIdAsync(inputModel.Id);
+        // Buscar a preparação mais antiga com status Received
+        var preparation = await _repository.GetOldestReceivedAsync();
         if (preparation == null)
         {
-            throw new PreparationNotFoundException(inputModel.Id);
+            throw new PreparationNotFoundException(Guid.Empty, "Não há preparações disponíveis com status Received.");
         }
 
-        // Validar status
+        // Validar status (já deve ser Received, mas validamos por segurança)
         if (preparation.Status != EnumPreparationStatus.Received)
         {
             throw new InvalidOperationException(

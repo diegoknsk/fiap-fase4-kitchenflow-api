@@ -88,6 +88,22 @@ public class PreparationRepository : IPreparationRepository
     }
 
     /// <inheritdoc />
+    public async Task<Preparation?> GetOldestReceivedAsync()
+    {
+        var entity = await _context.Preparations
+            .Where(p => p.Status == (int)EnumPreparationStatus.Received)
+            .OrderBy(p => p.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (entity == null)
+        {
+            return null;
+        }
+
+        return ToDomain(entity);
+    }
+
+    /// <inheritdoc />
     public async Task UpdateAsync(Preparation preparation)
     {
         var entity = await _context.Preparations

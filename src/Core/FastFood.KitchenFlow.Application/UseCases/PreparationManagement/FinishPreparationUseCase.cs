@@ -36,9 +36,14 @@ public class FinishPreparationUseCase
     public async Task<ApiResponse<FinishPreparationResponse>> ExecuteAsync(FinishPreparationInputModel inputModel)
     {
         // Validar InputModel
+        if (inputModel == null)
+        {
+            throw new ValidationException("Dados de entrada não podem ser nulos.");
+        }
+
         if (inputModel.Id == Guid.Empty)
         {
-            throw new ArgumentException("Id não pode ser vazio.", nameof(inputModel));
+            throw new ValidationException("Id não pode ser vazio.");
         }
 
         // Buscar Preparation

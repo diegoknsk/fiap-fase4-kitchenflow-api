@@ -1,3 +1,4 @@
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.PreparationManagement;
@@ -32,14 +33,19 @@ public class GetPreparationsUseCase
     public async Task<ApiResponse<GetPreparationsResponse>> ExecuteAsync(GetPreparationsInputModel inputModel)
     {
         // Validar InputModel
+        if (inputModel == null)
+        {
+            throw new ValidationException("Dados de entrada não podem ser nulos.");
+        }
+
         if (inputModel.PageNumber < 1)
         {
-            throw new ArgumentException("PageNumber deve ser maior ou igual a 1.", nameof(inputModel));
+            throw new ValidationException("PageNumber deve ser maior ou igual a 1.");
         }
 
         if (inputModel.PageSize < 1 || inputModel.PageSize > 100)
         {
-            throw new ArgumentException("PageSize deve estar entre 1 e 100.", nameof(inputModel));
+            throw new ValidationException("PageSize deve estar entre 1 e 100.");
         }
 
         // Buscar preparações com paginação

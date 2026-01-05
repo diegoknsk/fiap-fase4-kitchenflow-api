@@ -43,9 +43,14 @@ public class CreateDeliveryUseCase
     public async Task<ApiResponse<CreateDeliveryResponse>> ExecuteAsync(CreateDeliveryInputModel inputModel)
     {
         // Validar InputModel
+        if (inputModel == null)
+        {
+            throw new ValidationException("Dados de entrada não podem ser nulos.");
+        }
+
         if (inputModel.PreparationId == Guid.Empty)
         {
-            throw new ArgumentException("PreparationId não pode ser vazio.", nameof(inputModel));
+            throw new ValidationException("PreparationId não pode ser vazio.");
         }
 
         // Verificar se a Preparation existe

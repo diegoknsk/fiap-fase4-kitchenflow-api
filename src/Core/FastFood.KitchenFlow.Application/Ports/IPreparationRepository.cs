@@ -40,6 +40,13 @@ public interface IPreparationRepository
     Task<(IEnumerable<Preparation> preparations, int totalCount)> GetPagedAsync(int pageNumber, int pageSize, int? status);
 
     /// <summary>
+    /// Busca a preparação mais antiga com status Received.
+    /// Usado para pegar o próximo pedido para preparação (TakeNext).
+    /// </summary>
+    /// <returns>Preparation encontrada ou null se não existir.</returns>
+    Task<Preparation?> GetOldestReceivedAsync();
+
+    /// <summary>
     /// Atualiza uma preparação existente no banco de dados.
     /// </summary>
     /// <param name="preparation">Entidade de domínio Preparation a ser atualizada.</param>

@@ -1,3 +1,4 @@
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.OutputModels.DeliveryManagement;
@@ -30,20 +31,26 @@ public class GetReadyDeliveriesUseCase
     /// <returns>ApiResponse com a lista de entregas prontas para retirada.</returns>
     public async Task<ApiResponse<GetReadyDeliveriesResponse>> ExecuteAsync(GetReadyDeliveriesInputModel inputModel)
     {
+        // Validar InputModel
+        if (inputModel == null)
+        {
+            throw new ValidationException("Dados de entrada não podem ser nulos.");
+        }
+
         // Validar parâmetros de paginação
         if (inputModel.PageNumber < 1)
         {
-            inputModel.PageNumber = 1;
+            throw new ValidationException("PageNumber deve ser maior ou igual a 1.");
         }
 
         if (inputModel.PageSize < 1)
         {
-            inputModel.PageSize = 10;
+            throw new ValidationException("PageSize deve ser maior ou igual a 1.");
         }
 
         if (inputModel.PageSize > 100)
         {
-            inputModel.PageSize = 100;
+            throw new ValidationException("PageSize não pode ser maior que 100.");
         }
 
         // Buscar entregas prontas para retirada
