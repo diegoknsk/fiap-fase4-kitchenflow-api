@@ -134,4 +134,81 @@ public class DeliveryControllerTests
         var badRequestResult = result as BadRequestObjectResult;
         badRequestResult!.StatusCode.Should().Be(400);
     }
+
+    [Fact]
+    public async Task GetReadyDeliveries_WhenUseCaseReturnsFailure_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var apiResponse = ApiResponse<GetReadyDeliveriesResponse>.Fail("Erro ao buscar entregas");
+        _mockGetReadyUseCase.Setup(u => u.ExecuteAsync(It.IsAny<GetReadyDeliveriesInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.GetReadyDeliveries(1, 10);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<GetReadyDeliveriesResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetReadyDeliveries_WhenGenericException_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        _mockGetReadyUseCase.Setup(u => u.ExecuteAsync(It.IsAny<GetReadyDeliveriesInputModel>()))
+            .ThrowsAsync(new Exception("Erro genérico"));
+
+        // Act
+        var result = await _controller.GetReadyDeliveries(1, 10);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<GetReadyDeliveriesResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+        returnedApiResponse.Message.Should().Be("Erro ao processar a requisição.");
+    }
+
+    [Fact]
+    public async Task FinalizeDelivery_WhenUseCaseReturnsFailure_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var deliveryId = Guid.NewGuid();
+        var apiResponse = ApiResponse<FinalizeDeliveryResponse>.Fail("Erro ao finalizar entrega");
+        _mockFinalizeUseCase.Setup(u => u.ExecuteAsync(It.IsAny<FinalizeDeliveryInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.FinalizeDelivery(deliveryId);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<FinalizeDeliveryResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FinalizeDelivery_WhenGenericException_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var deliveryId = Guid.NewGuid();
+        _mockFinalizeUseCase.Setup(u => u.ExecuteAsync(It.IsAny<FinalizeDeliveryInputModel>()))
+            .ThrowsAsync(new Exception("Erro genérico"));
+
+        // Act
+        var result = await _controller.FinalizeDelivery(deliveryId);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<FinalizeDeliveryResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+    }
 }

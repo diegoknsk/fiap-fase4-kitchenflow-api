@@ -197,6 +197,44 @@ public class PreparationControllerTests
     }
 
     [Fact]
+    public async Task GetPreparations_WhenUseCaseReturnsFailure_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var apiResponse = ApiResponse<GetPreparationsResponse>.Fail("Erro ao buscar preparações");
+        _mockGetUseCase.Setup(u => u.ExecuteAsync(It.IsAny<GetPreparationsInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.GetPreparations(1, 10, null);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<GetPreparationsResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetPreparations_WhenGenericException_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        _mockGetUseCase.Setup(u => u.ExecuteAsync(It.IsAny<GetPreparationsInputModel>()))
+            .ThrowsAsync(new Exception("Erro genérico"));
+
+        // Act
+        var result = await _controller.GetPreparations(1, 10, null);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<GetPreparationsResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+        returnedApiResponse.Message.Should().Be("Erro ao processar a requisição.");
+    }
+
+    [Fact]
     public async Task StartPreparation_WhenValidRequest_ShouldReturn200OK()
     {
         // Arrange
@@ -252,6 +290,39 @@ public class PreparationControllerTests
         // Arrange
         _mockStartUseCase.Setup(u => u.ExecuteAsync(It.IsAny<StartPreparationInputModel>()))
             .ThrowsAsync(new InvalidOperationException("Status inválido"));
+
+        // Act
+        var result = await _controller.StartPreparation();
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task StartPreparation_WhenUseCaseReturnsFailure_ShouldReturn404NotFound()
+    {
+        // Arrange
+        var apiResponse = ApiResponse<StartPreparationResponse>.Fail("Nenhuma preparação disponível");
+        _mockStartUseCase.Setup(u => u.ExecuteAsync(It.IsAny<StartPreparationInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.StartPreparation();
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        var notFoundResult = result as NotFoundObjectResult;
+        notFoundResult!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task StartPreparation_WhenGenericException_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        _mockStartUseCase.Setup(u => u.ExecuteAsync(It.IsAny<StartPreparationInputModel>()))
+            .ThrowsAsync(new Exception("Erro genérico"));
 
         // Act
         var result = await _controller.StartPreparation();
@@ -330,5 +401,72 @@ public class PreparationControllerTests
         result.Should().BeOfType<BadRequestObjectResult>();
         var badRequestResult = result as BadRequestObjectResult;
         badRequestResult!.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task FinishPreparation_WhenUseCaseReturnsFailure_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var preparationId = Guid.NewGuid();
+        var apiResponse = ApiResponse<FinishPreparationResponse>.Fail("Erro ao finalizar preparação");
+        _mockFinishUseCase.Setup(u => u.ExecuteAsync(It.IsAny<FinishPreparationInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.FinishPreparation(preparationId);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<FinishPreparationResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FinishPreparation_WhenGenericException_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var preparationId = Guid.NewGuid();
+        _mockFinishUseCase.Setup(u => u.ExecuteAsync(It.IsAny<FinishPreparationInputModel>()))
+            .ThrowsAsync(new Exception("Erro genérico"));
+
+        // Act
+        var result = await _controller.FinishPreparation(preparationId);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<FinishPreparationResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
+        returnedApiResponse.Message.Should().Be("Erro ao processar a requisição.");
+    }
+
+    [Fact]
+    public async Task CreatePreparation_WhenUseCaseReturnsFailure_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var orderSnapshot = $$"""{"orderId":"{{orderId}}","orderCode":"ORD-001"}""";
+        var request = new CreatePreparationRequest
+        {
+            OrderId = orderId,
+            OrderSnapshot = orderSnapshot
+        };
+
+        var apiResponse = ApiResponse<CreatePreparationResponse>.Fail("Erro ao criar preparação");
+        _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreatePreparationInputModel>()))
+            .ReturnsAsync(apiResponse);
+
+        // Act
+        var result = await _controller.CreatePreparation(request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.StatusCode.Should().Be(400);
+        var returnedApiResponse = badRequestResult.Value as ApiResponse<CreatePreparationResponse>;
+        returnedApiResponse!.Success.Should().BeFalse();
     }
 }
