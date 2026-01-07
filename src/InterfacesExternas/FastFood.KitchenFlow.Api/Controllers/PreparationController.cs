@@ -3,6 +3,7 @@ using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
 using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FastFood.KitchenFlow.Api.Controllers;
@@ -78,6 +79,7 @@ public class PreparationController : ControllerBase
     /// <returns>ApiResponse com a lista paginada de preparações.</returns>
     /// <response code="200">Lista de preparações retornada com sucesso.</response>
     /// <response code="400">Parâmetros de paginação inválidos.</response>
+    //[Authorize(AuthenticationSchemes = "Cognito", Policy = "Admin")]
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<GetPreparationsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -113,6 +115,7 @@ public class PreparationController : ControllerBase
     /// <response code="200">Preparação iniciada com sucesso.</response>
     /// <response code="400">Status inválido para iniciar a preparação.</response>
     /// <response code="404">Nenhuma preparação disponível com status Received.</response>
+    //[Authorize(AuthenticationSchemes = "Cognito", Policy = "Admin")]
     [HttpPost("take-next")]
     [ProducesResponseType(typeof(ApiResponse<StartPreparationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -139,6 +142,7 @@ public class PreparationController : ControllerBase
     /// <response code="200">Preparação finalizada com sucesso.</response>
     /// <response code="400">Status inválido para finalizar a preparação.</response>
     /// <response code="404">Preparação não encontrada.</response>
+    //[Authorize(AuthenticationSchemes = "Cognito", Policy = "Admin")]
     [HttpPost("{id}/finish")]
     [ProducesResponseType(typeof(ApiResponse<FinishPreparationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

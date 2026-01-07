@@ -2,6 +2,7 @@ using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.DeliveryManagement;
 using FastFood.KitchenFlow.Application.UseCases.DeliveryManagement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FastFood.KitchenFlow.Api.Controllers;
@@ -36,6 +37,7 @@ public class DeliveryController : ControllerBase
     /// <param name="pageSize">Tamanho da página (default: 10).</param>
     /// <returns>ApiResponse com a lista de entregas prontas para retirada.</returns>
     /// <response code="200">Lista de entregas prontas para retirada.</response>
+    //[Authorize(AuthenticationSchemes = "Cognito", Policy = "Admin")]
     [HttpGet("ready")]
     [ProducesResponseType(typeof(ApiResponse<GetReadyDeliveriesResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReadyDeliveries(
@@ -67,6 +69,7 @@ public class DeliveryController : ControllerBase
     /// <response code="200">Entrega finalizada com sucesso.</response>
     /// <response code="400">Entrega não encontrada ou status inválido.</response>
     /// <response code="404">Entrega não encontrada.</response>
+    //[Authorize(AuthenticationSchemes = "Cognito", Policy = "Admin")]
     [HttpPost("{id}/finalize")]
     [ProducesResponseType(typeof(ApiResponse<FinalizeDeliveryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\FastFood.KitchenFlow.Application\FastFood.KitchenFlow.Application.csproj" />
     <ProjectReference Include="..\..\Core\FastFood.KitchenFlow.CrossCutting\FastFood.KitchenFlow.CrossCutting.csproj" />
+    <ProjectReference Include="..\..\Infra\FastFood.KitchenFlow.Infra\FastFood.KitchenFlow.Infra.csproj" />
     <ProjectReference Include="..\..\Infra\FastFood.KitchenFlow.Infra.Persistence\FastFood.KitchenFlow.Infra.Persistence.csproj" />
   </ItemGroup>
 
