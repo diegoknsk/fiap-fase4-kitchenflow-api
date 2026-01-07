@@ -33,7 +33,7 @@ public class FinalizeDeliveryUseCase
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="DeliveryNotFoundException">Lançada quando a entrega não é encontrada.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite a finalização.</exception>
-    public async Task<ApiResponse<FinalizeDeliveryResponse>> ExecuteAsync(FinalizeDeliveryInputModel inputModel)
+    public virtual async Task<ApiResponse<FinalizeDeliveryResponse>> ExecuteAsync(FinalizeDeliveryInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel == null)

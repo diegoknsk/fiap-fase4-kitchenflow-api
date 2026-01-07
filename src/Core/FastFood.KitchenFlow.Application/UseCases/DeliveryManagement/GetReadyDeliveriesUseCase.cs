@@ -29,7 +29,7 @@ public class GetReadyDeliveriesUseCase
     /// </summary>
     /// <param name="inputModel">Dados de entrada para listagem (paginação).</param>
     /// <returns>ApiResponse com a lista de entregas prontas para retirada.</returns>
-    public async Task<ApiResponse<GetReadyDeliveriesResponse>> ExecuteAsync(GetReadyDeliveriesInputModel inputModel)
+    public virtual async Task<ApiResponse<GetReadyDeliveriesResponse>> ExecuteAsync(GetReadyDeliveriesInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel == null)

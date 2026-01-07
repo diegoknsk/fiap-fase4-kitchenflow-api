@@ -37,7 +37,7 @@ public class FinishPreparationUseCase
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="PreparationNotFoundException">Lançada quando a preparação não é encontrada.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite finalizar a preparação.</exception>
-    public async Task<ApiResponse<FinishPreparationResponse>> ExecuteAsync(FinishPreparationInputModel inputModel)
+    public virtual async Task<ApiResponse<FinishPreparationResponse>> ExecuteAsync(FinishPreparationInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel == null)

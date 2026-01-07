@@ -1,5 +1,4 @@
 using FastFood.KitchenFlow.Api.Controllers;
-using FastFood.KitchenFlow.Api.Models.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
@@ -15,161 +14,24 @@ namespace FastFood.KitchenFlow.Tests.Unit.InterfacesExternas.Controllers;
 
 public class DeliveryControllerTests
 {
-    private readonly Mock<CreateDeliveryUseCase> _mockCreateUseCase;
     private readonly Mock<GetReadyDeliveriesUseCase> _mockGetReadyUseCase;
     private readonly Mock<FinalizeDeliveryUseCase> _mockFinalizeUseCase;
     private readonly DeliveryController _controller;
 
     public DeliveryControllerTests()
     {
-        _mockCreateUseCase = new Mock<CreateDeliveryUseCase>(
-            Mock.Of<IDeliveryRepository>(),
-            Mock.Of<IPreparationRepository>());
         _mockGetReadyUseCase = new Mock<GetReadyDeliveriesUseCase>(
             Mock.Of<IDeliveryRepository>());
         _mockFinalizeUseCase = new Mock<FinalizeDeliveryUseCase>(
             Mock.Of<IDeliveryRepository>());
         
         _controller = new DeliveryController(
-            _mockCreateUseCase.Object,
             _mockGetReadyUseCase.Object,
             _mockFinalizeUseCase.Object);
     }
 
-    [Fact]
-    public async Task CreateDelivery_WhenValidRequest_ShouldReturn201Created()
-    {
-        // Arrange
-        var preparationId = Guid.NewGuid();
-        var request = new CreateDeliveryRequest
-        {
-            PreparationId = preparationId
-        };
-
-        var response = new CreateDeliveryResponse
-        {
-            Id = Guid.NewGuid(),
-            PreparationId = preparationId,
-            OrderId = Guid.NewGuid(),
-            Status = 0,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var apiResponse = ApiResponse<CreateDeliveryResponse>.Ok(response, "Entrega criada com sucesso.");
-
-        _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreateDeliveryInputModel>()))
-            .ReturnsAsync(apiResponse);
-
-        // Act
-        var result = await _controller.CreateDelivery(request);
-
-        // Assert
-        result.Should().BeOfType<CreatedAtActionResult>();
-        var createdAtResult = result as CreatedAtActionResult;
-        createdAtResult!.StatusCode.Should().Be(201);
-        createdAtResult.Value.Should().BeOfType<ApiResponse<CreateDeliveryResponse>>();
-        var returnedApiResponse = createdAtResult.Value as ApiResponse<CreateDeliveryResponse>;
-        returnedApiResponse!.Success.Should().BeTrue();
-        returnedApiResponse.Message.Should().Be("Entrega criada com sucesso.");
-        returnedApiResponse.Content.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task CreateDelivery_WhenModelStateInvalid_ShouldReturn400BadRequest()
-    {
-        // Arrange
-        var request = new CreateDeliveryRequest();
-        _controller.ModelState.AddModelError("PreparationId", "PreparationId é obrigatório");
-
-        // Act
-        var result = await _controller.CreateDelivery(request);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.StatusCode.Should().Be(400);
-        badRequestResult.Value.Should().BeOfType<ApiResponse<CreateDeliveryResponse>>();
-        var apiResponse = badRequestResult.Value as ApiResponse<CreateDeliveryResponse>;
-        apiResponse!.Success.Should().BeFalse();
-        apiResponse.Message.Should().Be("Dados inválidos.");
-    }
-
-    [Fact]
-    public async Task CreateDelivery_WhenPreparationNotFound_ShouldReturn400BadRequest()
-    {
-        // Arrange
-        var preparationId = Guid.NewGuid();
-        var request = new CreateDeliveryRequest
-        {
-            PreparationId = preparationId
-        };
-
-        _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreateDeliveryInputModel>()))
-            .ThrowsAsync(new PreparationNotFoundException(preparationId));
-
-        // Act
-        var result = await _controller.CreateDelivery(request);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.StatusCode.Should().Be(400);
-        badRequestResult.Value.Should().BeOfType<ApiResponse<CreateDeliveryResponse>>();
-        var apiResponse = badRequestResult.Value as ApiResponse<CreateDeliveryResponse>;
-        apiResponse!.Success.Should().BeFalse();
-        apiResponse.Message.Should().Contain("não encontrada");
-    }
-
-    [Fact]
-    public async Task CreateDelivery_WhenPreparationNotFinished_ShouldReturn400BadRequest()
-    {
-        // Arrange
-        var preparationId = Guid.NewGuid();
-        var request = new CreateDeliveryRequest
-        {
-            PreparationId = preparationId
-        };
-
-        _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreateDeliveryInputModel>()))
-            .ThrowsAsync(new PreparationNotFinishedException(preparationId, 1));
-
-        // Act
-        var result = await _controller.CreateDelivery(request);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.StatusCode.Should().Be(400);
-        badRequestResult.Value.Should().BeOfType<ApiResponse<CreateDeliveryResponse>>();
-        var apiResponse = badRequestResult.Value as ApiResponse<CreateDeliveryResponse>;
-        apiResponse!.Success.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task CreateDelivery_WhenDeliveryAlreadyExists_ShouldReturn409Conflict()
-    {
-        // Arrange
-        var preparationId = Guid.NewGuid();
-        var request = new CreateDeliveryRequest
-        {
-            PreparationId = preparationId
-        };
-
-        _mockCreateUseCase.Setup(u => u.ExecuteAsync(It.IsAny<CreateDeliveryInputModel>()))
-            .ThrowsAsync(new DeliveryAlreadyExistsException(preparationId));
-
-        // Act
-        var result = await _controller.CreateDelivery(request);
-
-        // Assert
-        result.Should().BeOfType<ConflictObjectResult>();
-        var conflictResult = result as ConflictObjectResult;
-        conflictResult!.StatusCode.Should().Be(409);
-        conflictResult.Value.Should().BeOfType<ApiResponse<CreateDeliveryResponse>>();
-        var apiResponse = conflictResult.Value as ApiResponse<CreateDeliveryResponse>;
-        apiResponse!.Success.Should().BeFalse();
-        apiResponse.Message.Should().Contain("já existe");
-    }
+    // Nota: Os testes do método CreateDelivery foram removidos pois o endpoint foi removido na Story 14.
+    // O delivery agora é criado automaticamente quando a preparação é finalizada.
 
     [Fact]
     public async Task GetReadyDeliveries_WhenValidRequest_ShouldReturn200OK()

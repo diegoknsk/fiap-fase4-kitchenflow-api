@@ -32,15 +32,12 @@ public class StartPreparationUseCaseTests
         var preparation = Preparation.Create(orderId, orderSnapshot);
         var preparationId = preparation.Id;
         
-        _mockRepository.Setup(r => r.GetByIdAsync(preparationId))
+        _mockRepository.Setup(r => r.GetOldestReceivedAsync())
             .ReturnsAsync(preparation);
         _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Preparation>()))
             .Returns(Task.CompletedTask);
 
-        var inputModel = new StartPreparationInputModel
-        {
-            Id = preparationId
-        };
+        var inputModel = new StartPreparationInputModel();
 
         // Act
         var result = await _useCase.ExecuteAsync(inputModel);
@@ -52,41 +49,22 @@ public class StartPreparationUseCaseTests
         result.Message.Should().Be("Preparação iniciada com sucesso.");
         result.Content.Should().NotBeNull();
         
-        _mockRepository.Verify(r => r.GetByIdAsync(preparationId), Times.Once);
+        _mockRepository.Verify(r => r.GetOldestReceivedAsync(), Times.Once);
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Preparation>()), Times.Once);
     }
 
     [Fact]
-    public async Task StartPreparation_WhenIdIsEmpty_ShouldThrowArgumentException()
+    public async Task StartPreparation_WhenNoPreparationAvailable_ShouldThrowPreparationNotFoundException()
     {
         // Arrange
-        var inputModel = new StartPreparationInputModel
-        {
-            Id = Guid.Empty
-        };
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
-        exception.Message.Should().Contain("Id não pode ser vazio");
-    }
-
-    [Fact]
-    public async Task StartPreparation_WhenPreparationNotFound_ShouldThrowPreparationNotFoundException()
-    {
-        // Arrange
-        var preparationId = Guid.NewGuid();
-        
-        _mockRepository.Setup(r => r.GetByIdAsync(preparationId))
+        _mockRepository.Setup(r => r.GetOldestReceivedAsync())
             .ReturnsAsync((Preparation?)null);
 
-        var inputModel = new StartPreparationInputModel
-        {
-            Id = preparationId
-        };
+        var inputModel = new StartPreparationInputModel();
 
         // Act & Assert
         await Assert.ThrowsAsync<PreparationNotFoundException>(() => _useCase.ExecuteAsync(inputModel));
-        _mockRepository.Verify(r => r.GetByIdAsync(preparationId), Times.Once);
+        _mockRepository.Verify(r => r.GetOldestReceivedAsync(), Times.Once);
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Preparation>()), Times.Never);
     }
 
@@ -99,19 +77,16 @@ public class StartPreparationUseCaseTests
         var preparation = Preparation.Create(orderId, orderSnapshot);
         preparation.StartPreparation(); // Muda para InProgress
         
-        _mockRepository.Setup(r => r.GetByIdAsync(preparation.Id))
+        _mockRepository.Setup(r => r.GetOldestReceivedAsync())
             .ReturnsAsync(preparation);
 
-        var inputModel = new StartPreparationInputModel
-        {
-            Id = preparation.Id
-        };
+        var inputModel = new StartPreparationInputModel();
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().NotBeNullOrEmpty();
         exception.Message.ToLower().Should().Contain("iniciar");
-        _mockRepository.Verify(r => r.GetByIdAsync(preparation.Id), Times.Once);
+        _mockRepository.Verify(r => r.GetOldestReceivedAsync(), Times.Once);
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Preparation>()), Times.Never);
     }
 }

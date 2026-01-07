@@ -67,7 +67,7 @@ public class FinalizeDeliveryUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("Id não pode ser vazio");
     }
 

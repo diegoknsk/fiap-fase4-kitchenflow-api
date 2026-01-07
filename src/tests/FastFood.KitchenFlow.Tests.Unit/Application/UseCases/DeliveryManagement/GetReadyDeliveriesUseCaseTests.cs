@@ -1,3 +1,4 @@
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Ports;
@@ -53,74 +54,50 @@ public class GetReadyDeliveriesUseCaseTests
     }
 
     [Fact]
-    public async Task GetReadyDeliveries_WhenPageNumberIsLessThanOne_ShouldDefaultToOne()
+    public async Task GetReadyDeliveries_WhenPageNumberIsLessThanOne_ShouldThrowValidationException()
     {
         // Arrange
-        var deliveries = new List<Delivery>();
-        
-        _mockRepository.Setup(r => r.GetReadyDeliveriesAsync(1, 10))
-            .ReturnsAsync((deliveries, 0));
-
         var inputModel = new GetReadyDeliveriesInputModel
         {
             PageNumber = 0,
             PageSize = 10
         };
 
-        // Act
-        var result = await _useCase.ExecuteAsync(inputModel);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Success.Should().BeTrue();
-        _mockRepository.Verify(r => r.GetReadyDeliveriesAsync(1, 10), Times.Once);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
+        exception.Message.Should().Contain("PageNumber deve ser maior ou igual a 1");
+        _mockRepository.Verify(r => r.GetReadyDeliveriesAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
-    public async Task GetReadyDeliveries_WhenPageSizeIsLessThanOne_ShouldDefaultToTen()
+    public async Task GetReadyDeliveries_WhenPageSizeIsLessThanOne_ShouldThrowValidationException()
     {
         // Arrange
-        var deliveries = new List<Delivery>();
-        
-        _mockRepository.Setup(r => r.GetReadyDeliveriesAsync(1, 10))
-            .ReturnsAsync((deliveries, 0));
-
         var inputModel = new GetReadyDeliveriesInputModel
         {
             PageNumber = 1,
             PageSize = 0
         };
 
-        // Act
-        var result = await _useCase.ExecuteAsync(inputModel);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Success.Should().BeTrue();
-        _mockRepository.Verify(r => r.GetReadyDeliveriesAsync(1, 10), Times.Once);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
+        exception.Message.Should().Contain("PageSize deve ser maior ou igual a 1");
+        _mockRepository.Verify(r => r.GetReadyDeliveriesAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
-    public async Task GetReadyDeliveries_WhenPageSizeExceedsMax_ShouldDefaultToHundred()
+    public async Task GetReadyDeliveries_WhenPageSizeExceedsMax_ShouldThrowValidationException()
     {
         // Arrange
-        var deliveries = new List<Delivery>();
-        
-        _mockRepository.Setup(r => r.GetReadyDeliveriesAsync(1, 100))
-            .ReturnsAsync((deliveries, 0));
-
         var inputModel = new GetReadyDeliveriesInputModel
         {
             PageNumber = 1,
             PageSize = 101
         };
 
-        // Act
-        var result = await _useCase.ExecuteAsync(inputModel);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Success.Should().BeTrue();
-        _mockRepository.Verify(r => r.GetReadyDeliveriesAsync(1, 100), Times.Once);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
+        exception.Message.Should().Contain("PageSize não pode ser maior que 100");
+        _mockRepository.Verify(r => r.GetReadyDeliveriesAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
 }

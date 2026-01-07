@@ -71,7 +71,7 @@ public class CreatePreparationUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("OrderId não pode ser vazio");
     }
 
@@ -86,7 +86,7 @@ public class CreatePreparationUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("OrderSnapshot não pode ser nulo ou vazio");
     }
 
@@ -101,7 +101,7 @@ public class CreatePreparationUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("OrderSnapshot não pode ser nulo ou vazio");
     }
 
@@ -116,7 +116,7 @@ public class CreatePreparationUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("OrderSnapshot contém JSON inválido");
     }
 
@@ -134,28 +134,12 @@ public class CreatePreparationUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("OrderSnapshot contém dados inválidos");
     }
 
-    [Fact]
-    public async Task CreatePreparation_WhenOrderIdDoesNotMatch_ShouldThrowArgumentException()
-    {
-        // Arrange
-        var orderId = Guid.NewGuid();
-        var differentOrderId = Guid.NewGuid();
-        var orderSnapshot = $$"""{"orderId":"{{differentOrderId}}","orderCode":"ORD-001","totalPrice":50.00,"createdAt":"2024-01-01T00:00:00Z","items":[{"productId":"{{Guid.NewGuid()}}","quantity":1,"price":50.00}],"paymentId":"{{Guid.NewGuid()}}","paidAt":"2024-01-01T00:00:00Z"}""";
-        
-        var inputModel = new CreatePreparationInputModel
-        {
-            OrderId = orderId,
-            OrderSnapshot = orderSnapshot
-        };
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
-        exception.Message.Should().Contain("não corresponde");
-    }
+    // Nota: Teste removido - validação de correspondência de OrderId foi removida do UseCase
+    // (OrderSnapshot é apenas referência, não precisa corresponder ao OrderId)
 
     [Fact]
     public async Task CreatePreparation_WhenPreparationAlreadyExists_ShouldThrowPreparationAlreadyExistsException()

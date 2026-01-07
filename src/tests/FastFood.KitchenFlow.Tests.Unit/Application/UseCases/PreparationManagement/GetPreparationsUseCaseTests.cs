@@ -1,3 +1,4 @@
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Ports;
@@ -66,7 +67,7 @@ public class GetPreparationsUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("PageNumber deve ser maior ou igual a 1");
     }
 
@@ -82,7 +83,7 @@ public class GetPreparationsUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("PageSize deve estar entre 1 e 100");
     }
 
@@ -98,7 +99,7 @@ public class GetPreparationsUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("PageSize deve estar entre 1 e 100");
     }
 

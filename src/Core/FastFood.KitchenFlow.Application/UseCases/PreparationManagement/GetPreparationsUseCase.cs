@@ -30,7 +30,7 @@ public class GetPreparationsUseCase
     /// <param name="inputModel">Dados de entrada para listagem (paginação e filtros).</param>
     /// <returns>ApiResponse com a lista paginada de preparações.</returns>
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
-    public async Task<ApiResponse<GetPreparationsResponse>> ExecuteAsync(GetPreparationsInputModel inputModel)
+    public virtual async Task<ApiResponse<GetPreparationsResponse>> ExecuteAsync(GetPreparationsInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel == null)

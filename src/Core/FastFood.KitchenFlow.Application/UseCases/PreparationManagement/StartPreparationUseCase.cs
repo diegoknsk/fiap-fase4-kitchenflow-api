@@ -34,7 +34,7 @@ public class StartPreparationUseCase
     /// <exception cref="ArgumentException">Lançada quando os dados de entrada são inválidos.</exception>
     /// <exception cref="PreparationNotFoundException">Lançada quando não há preparação disponível.</exception>
     /// <exception cref="InvalidOperationException">Lançada quando o status atual não permite iniciar a preparação.</exception>
-    public async Task<ApiResponse<StartPreparationResponse>> ExecuteAsync(StartPreparationInputModel inputModel)
+    public virtual async Task<ApiResponse<StartPreparationResponse>> ExecuteAsync(StartPreparationInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel == null)

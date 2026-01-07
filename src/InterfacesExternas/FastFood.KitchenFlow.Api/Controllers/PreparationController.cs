@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using FastFood.KitchenFlow.Api.Models.PreparationManagement;
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.PreparationManagement;
@@ -62,11 +64,31 @@ public class PreparationController : ControllerBase
             };
 
             var result = await _createPreparationUseCase.ExecuteAsync(inputModel);
-            return result.Success ? StatusCode(201, result) : BadRequest(result);
+            if (result.Success)
+            {
+                // Extrair o ID do Content para usar no CreatedAtAction
+                Guid? preparationId = null;
+                if (result.Content is Dictionary<string, object> contentDict && 
+                    contentDict.ContainsKey("createPreparation") &&
+                    contentDict["createPreparation"] is CreatePreparationResponse response)
+                {
+                    preparationId = response.Id;
+                }
+                
+                return CreatedAtAction(
+                    nameof(GetPreparations), 
+                    new { id = preparationId ?? Guid.Empty }, 
+                    result);
+            }
+            return BadRequest(result);
         }
-        catch (Exception)
+        catch (PreparationAlreadyExistsException ex)
         {
-            return BadRequest(ApiResponse<CreatePreparationResponse>.Fail("Erro ao processar a requisição."));
+            return Conflict(ApiResponse<CreatePreparationResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<CreatePreparationResponse>.Fail(ex.Message));
         }
     }
 
@@ -128,9 +150,17 @@ public class PreparationController : ControllerBase
             var result = await _startPreparationUseCase.ExecuteAsync(inputModel);
             return result.Success ? Ok(result) : NotFound(result);
         }
-        catch (Exception)
+        catch (PreparationNotFoundException)
         {
-            return NotFound(ApiResponse<StartPreparationResponse>.Fail("Erro ao processar a requisição."));
+            return NotFound(ApiResponse<StartPreparationResponse>.Fail("Nenhuma preparação disponível com status Received."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<StartPreparationResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<StartPreparationResponse>.Fail(ex.Message));
         }
     }
 
@@ -158,6 +188,14 @@ public class PreparationController : ControllerBase
 
             var result = await _finishPreparationUseCase.ExecuteAsync(inputModel);
             return result.Success ? Ok(result) : BadRequest(result);
+        }
+        catch (PreparationNotFoundException ex)
+        {
+            return NotFound(ApiResponse<FinishPreparationResponse>.Fail(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<FinishPreparationResponse>.Fail(ex.Message));
         }
         catch (Exception)
         {

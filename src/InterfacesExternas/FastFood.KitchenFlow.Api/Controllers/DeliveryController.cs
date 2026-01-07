@@ -1,3 +1,4 @@
+using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.DeliveryManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
 using FastFood.KitchenFlow.Application.Responses.DeliveryManagement;
@@ -86,9 +87,17 @@ public class DeliveryController : ControllerBase
             var result = await _finalizeDeliveryUseCase.ExecuteAsync(inputModel);
             return result.Success ? Ok(result) : BadRequest(result);
         }
-        catch (Exception)
+        catch (DeliveryNotFoundException ex)
         {
-            return BadRequest(ApiResponse<FinalizeDeliveryResponse>.Fail("Erro ao processar a requisição."));
+            return NotFound(ApiResponse<FinalizeDeliveryResponse>.Fail(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<FinalizeDeliveryResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<FinalizeDeliveryResponse>.Fail(ex.Message));
         }
     }
 

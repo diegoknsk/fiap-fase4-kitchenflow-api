@@ -40,7 +40,7 @@ public class CreateDeliveryUseCase
     /// <exception cref="PreparationNotFoundException">Lançada quando a preparação não é encontrada.</exception>
     /// <exception cref="PreparationNotFinishedException">Lançada quando a preparação não está com status Finished.</exception>
     /// <exception cref="DeliveryAlreadyExistsException">Lançada quando já existe uma entrega para a preparação (idempotência).</exception>
-    public async Task<ApiResponse<CreateDeliveryResponse>> ExecuteAsync(CreateDeliveryInputModel inputModel)
+    public virtual async Task<ApiResponse<CreateDeliveryResponse>> ExecuteAsync(CreateDeliveryInputModel inputModel)
     {
         // Validar InputModel
         if (inputModel == null)

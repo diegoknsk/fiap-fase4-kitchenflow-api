@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FastFood.KitchenFlow.Application.Exceptions;
 using FastFood.KitchenFlow.Application.InputModels.PreparationManagement;
 using FastFood.KitchenFlow.Application.Models.Common;
@@ -61,8 +62,18 @@ public class FinishPreparationUseCaseTests
         result.Success.Should().BeTrue();
         result.Message.Should().Be("Preparação finalizada com sucesso.");
         result.Content.Should().NotBeNull();
-        result.Content!.DeliveryId.Should().NotBeNull();
-        result.Content.DeliveryId.Should().NotBe(Guid.Empty);
+        
+        // Content é um Dictionary<string, object> devido ao ToNamedContent
+        var contentDict = result.Content as Dictionary<string, object>;
+        contentDict.Should().NotBeNull();
+        contentDict!.Should().ContainKey("finishPreparation");
+        var response = contentDict!["finishPreparation"] as FinishPreparationResponse;
+        response.Should().NotBeNull();
+        if (response != null)
+        {
+            response.DeliveryId.Should().NotBeNull();
+            response.DeliveryId!.Value.Should().NotBe(Guid.Empty);
+        }
         
         _mockRepository.Verify(r => r.GetByIdAsync(preparationId), Times.Once);
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Preparation>()), Times.Once);
@@ -168,7 +179,17 @@ public class FinishPreparationUseCaseTests
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
         result.Content.Should().NotBeNull();
-        result.Content!.DeliveryId.Should().Be(existingDeliveryId);
+        
+        // Content é um Dictionary<string, object> devido ao ToNamedContent
+        var contentDict = result.Content as Dictionary<string, object>;
+        contentDict.Should().NotBeNull();
+        contentDict!.Should().ContainKey("finishPreparation");
+        var response = contentDict!["finishPreparation"] as FinishPreparationResponse;
+        response.Should().NotBeNull();
+        if (response != null)
+        {
+            response.DeliveryId.Should().Be(existingDeliveryId);
+        }
         
         _mockRepository.Verify(r => r.GetByIdAsync(preparationId), Times.Once);
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Preparation>()), Times.Once);

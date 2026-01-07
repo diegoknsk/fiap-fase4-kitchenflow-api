@@ -76,7 +76,7 @@ public class CreateDeliveryUseCaseTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecuteAsync(inputModel));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecuteAsync(inputModel));
         exception.Message.Should().Contain("PreparationId não pode ser vazio");
     }
 
