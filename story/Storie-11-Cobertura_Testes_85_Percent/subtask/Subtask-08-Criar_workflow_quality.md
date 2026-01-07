@@ -1,0 +1,293 @@
+# Subtask 08: Criar workflow quality.yml para SonarCloud
+
+## Descrição
+Criar o workflow `quality.yml` no GitHub Actions para executar build, testes com cobertura e integração com SonarCloud, seguindo as lições aprendidas do projeto OrderHub e garantindo que a cobertura mínima de 85% seja verificada.
+
+## Passos de implementação
+- Criar arquivo `.github/workflows/quality.yml`
+- Configurar workflow para executar em Pull Requests e push para main
+- Configurar build com símbolos de debug (CRÍTICO para cobertura)
+- Configurar testes com cobertura em formato OpenCover
+- Configurar consolidação de arquivos de cobertura
+- Configurar verificação de threshold de 85% de cobertura
+- Configurar integração com SonarCloud
+- Substituir placeholders (ORGANIZACAO, PROJETO, nome da solução)
+
+## Estrutura do workflow
+
+O workflow deve seguir o padrão do documento de lições aprendidas (`docs/PROMPT_MICROSERVICOS_TESTES_DEPLOY.md`), com as seguintes adaptações:
+
+### Configurações importantes:
+- **Build com símbolos de debug**: `/p:DebugType=portable /p:DebugSymbols=true` (CRÍTICO)
+- **Formato OpenCover**: `/p:CoverletOutputFormat="opencover"` (único formato suportado pelo SonarCloud)
+- **Threshold de cobertura**: 85% (ao invés de 80%)
+- **Exclusões de cobertura**: `**/*Program.cs,**/*Startup.cs,**/Migrations/**,**/*Dto.cs`
+- **Quality Gate wait**: `/d:sonar.qualitygate.wait=true` (bloqueia se Quality Gate falhar)
+
+### Placeholders a substituir:
+- `{ORGANIZACAO}`: Nome da organização no SonarCloud (ex: `diegoknsk`)
+- `{PROJETO}`: Nome do projeto no SonarCloud (ex: `fiap-fase4-kitchenflow-api`)
+- `FastFood.{Servico}.sln`: Substituir por `FastFood.KitchenFlow.sln`
+
+## Estrutura do workflow esperada
+
+```yaml
+name: PR - Build, Test, Sonar
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Cache Sonar
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Sonar - Begin
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            echo "=== Configuring SonarCloud for Pull Request ==="
+            dotnet-sonarscanner begin \
+              /k:"{ORGANIZACAO}_{PROJETO}" \
+              /o:"{ORGANIZACAO}" \
+              /d:sonar.token="$SONAR_TOKEN" \
+              /d:sonar.cs.opencover.reportsPaths="TestResults/coverage/coverage.opencover.xml" \
+              /d:sonar.coverage.exclusions="**/*Program.cs,**/*Startup.cs,**/Migrations/**,**/*Dto.cs" \
+              /d:sonar.qualitygate.wait=true \
+              /d:sonar.pullrequest.provider=github \
+              /d:sonar.pullrequest.github.repository="$GITHUB_REPOSITORY" \
+              /d:sonar.pullrequest.key="$PR_NUMBER" \
+              /d:sonar.pullrequest.branch="$PR_HEAD_REF" \
+              /d:sonar.pullrequest.base="$PR_BASE_REF"
+          else
+            echo "=== Configuring SonarCloud for Branch Analysis ==="
+            dotnet-sonarscanner begin \
+              /k:"{ORGANIZACAO}_{PROJETO}" \
+              /o:"{ORGANIZACAO}" \
+              /d:sonar.token="$SONAR_TOKEN" \
+              /d:sonar.cs.opencover.reportsPaths="TestResults/coverage/coverage.opencover.xml" \
+              /d:sonar.coverage.exclusions="**/*Program.cs,**/*Startup.cs,**/Migrations/**,**/*Dto.cs" \
+              /d:sonar.qualitygate.wait=true
+          fi
+
+      - name: Restore
+        run: dotnet restore FastFood.KitchenFlow.sln
+
+      - name: Build
+        run: dotnet build FastFood.KitchenFlow.sln -c Release --no-restore /p:DebugType=portable /p:DebugSymbols=true
+
+      - name: Test (Unit + BDD) with coverage
+        run: |
+          mkdir -p TestResults/coverage
+          dotnet test FastFood.KitchenFlow.sln -c Release --no-build \
+            --logger "trx;LogFileName=test_results.trx" \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat="opencover" \
+            /p:CoverletOutput="TestResults/coverage/"
+
+      - name: List coverage files
+        run: |
+          echo "=== Coverage files generated ==="
+          find . -name "coverage.opencover.xml" -type f || echo "No coverage files found"
+          echo ""
+          echo "=== TestResults directory structure ==="
+          ls -la TestResults/ || echo "TestResults directory not found"
+
+      - name: Consolidate coverage reports
+        run: |
+          mkdir -p TestResults/coverage
+          COVERAGE_FILES=$(find . -name "coverage.opencover.xml" -type f 2>/dev/null | grep -v ".git" || true)
+          echo "=== Found coverage files ==="
+          if [ -n "$COVERAGE_FILES" ]; then
+            echo "$COVERAGE_FILES"
+            COVERAGE_COUNT=$(echo "$COVERAGE_FILES" | wc -l | tr -d ' ')
+            echo "Found $COVERAGE_COUNT coverage file(s)"
+            
+            if [ "$COVERAGE_COUNT" -eq 1 ]; then
+              echo "Copying single coverage file..."
+              cp "$COVERAGE_FILES" TestResults/coverage/coverage.opencover.xml
+            else
+              echo "Multiple coverage files found, selecting largest..."
+              LARGEST_FILE=""
+              LARGEST_SIZE=0
+              for file in $COVERAGE_FILES; do
+                SIZE=$(stat -c%s "$file" 2>/dev/null || echo "0")
+                if [ "$SIZE" -gt "$LARGEST_SIZE" ]; then
+                  LARGEST_SIZE=$SIZE
+                  LARGEST_FILE="$file"
+                fi
+              done
+              if [ -n "$LARGEST_FILE" ]; then
+                echo "Using largest file: $LARGEST_FILE"
+                cp "$LARGEST_FILE" TestResults/coverage/coverage.opencover.xml
+              else
+                FIRST_FILE=$(echo "$COVERAGE_FILES" | head -n 1)
+                echo "Using first file as fallback: $FIRST_FILE"
+                cp "$FIRST_FILE" TestResults/coverage/coverage.opencover.xml
+              fi
+            fi
+            
+            echo "=== Coverage file consolidated ==="
+            ls -lh TestResults/coverage/coverage.opencover.xml
+          else
+            echo "ERROR: No coverage files found to consolidate"
+            exit 1
+          fi
+
+      - name: Verify coverage file before Sonar End
+        run: |
+          echo "=== Verifying coverage file ==="
+          COVERAGE_PATH="TestResults/coverage/coverage.opencover.xml"
+          if [ -f "$COVERAGE_PATH" ]; then
+            echo "✓ Coverage file exists at $COVERAGE_PATH"
+            ls -lh "$COVERAGE_PATH"
+            if grep -q "<CoverageSession>" "$COVERAGE_PATH"; then
+              echo "✓ File contains valid OpenCover XML structure"
+            else
+              echo "✗ File does not contain valid OpenCover XML structure"
+              exit 1
+            fi
+          else
+            echo "✗ Coverage file NOT found at $COVERAGE_PATH"
+            find . -name "coverage.opencover.xml" -type f
+            exit 1
+          fi
+
+      - name: Check Coverage Threshold (85%)
+        run: |
+          echo "=== Checking Coverage Threshold ==="
+          COVERAGE_PATH="TestResults/coverage/coverage.opencover.xml"
+          MIN_COVERAGE=85
+          
+          if [ ! -f "$COVERAGE_PATH" ]; then
+            echo "✗ Coverage file not found at $COVERAGE_PATH"
+            exit 1
+          fi
+          
+          python3 << EOF
+          import xml.etree.ElementTree as ET
+          import sys
+          
+          try:
+              tree = ET.parse('TestResults/coverage/coverage.opencover.xml')
+              root = tree.getroot()
+              
+              total_sequence_points = 0
+              visited_sequence_points = 0
+              
+              for summary in root.findall('.//Summary'):
+                  num_seq = int(summary.get('numSequencePoints', 0))
+                  visited_seq = int(summary.get('visitedSequencePoints', 0))
+                  total_sequence_points += num_seq
+                  visited_sequence_points += visited_seq
+              
+              if total_sequence_points == 0:
+                  print("⚠ No sequence points found in coverage report")
+                  sys.exit(1)
+              
+              coverage_percentage = (visited_sequence_points / total_sequence_points) * 100
+              min_coverage = float(${MIN_COVERAGE})
+              
+              print("")
+              print("==========================================")
+              print("📊 CODE COVERAGE REPORT")
+              print("==========================================")
+              print(f"Total sequence points: {total_sequence_points:,}")
+              print(f"Visited sequence points: {visited_sequence_points:,}")
+              print(f"Coverage: {coverage_percentage:.2f}%")
+              print(f"Minimum required: {min_coverage:.0f}%")
+              print("==========================================")
+              print("")
+              
+              if coverage_percentage < min_coverage:
+                  print(f"❌ FAIL: Coverage {coverage_percentage:.2f}% is below minimum {min_coverage:.0f}%")
+                  sys.exit(1)
+              else:
+                  print(f"✅ PASS: Coverage {coverage_percentage:.2f}% meets minimum {min_coverage:.0f}%")
+                  sys.exit(0)
+                  
+          except Exception as e:
+              print(f"✗ Error parsing coverage file: {e}")
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
+          EOF
+          
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "=========================================="
+            echo "❌ COVERAGE CHECK FAILED"
+            echo "=========================================="
+            echo "The code coverage is below the minimum threshold of ${MIN_COVERAGE}%"
+            echo "Please add more tests to increase coverage before merging."
+            echo "=========================================="
+            exit 1
+          fi
+
+      - name: Sonar - End
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+```
+
+## Observações importantes
+- **Build com símbolos de debug**: CRÍTICO - Sem isso, a cobertura não será processada corretamente
+- **Formato OpenCover**: Único formato suportado pelo SonarCloud
+- **Consolidação**: Coverlet gera arquivos em múltiplos locais, é necessário consolidar
+- **Threshold de 85%**: Verificação antes do Sonar End para falhar rápido
+- **Quality Gate Wait**: Bloqueia merges quando Quality Gate falhar
+- **Pull Request Analysis**: Configuração específica para análise de PRs
+
+## Como testar
+- Criar Pull Request para testar o workflow
+- Verificar que o workflow executa
+- Verificar que os testes são executados
+- Verificar que a cobertura é gerada
+- Verificar que o threshold de 85% é verificado
+- Verificar que o SonarCloud recebe os dados
+
+## Critérios de aceite
+- Arquivo `quality.yml` criado em `.github/workflows/`
+- Workflow configurado para executar em PRs e push para main
+- Build com símbolos de debug configurado
+- Testes com cobertura em formato OpenCover configurados
+- Consolidação de arquivos de cobertura implementada
+- Verificação de threshold de 85% implementada
+- Integração com SonarCloud configurada
+- Placeholders substituídos (ORGANIZACAO, PROJETO, solução)
+- Workflow executa com sucesso em Pull Request de teste
+- Cobertura aparece no SonarCloud

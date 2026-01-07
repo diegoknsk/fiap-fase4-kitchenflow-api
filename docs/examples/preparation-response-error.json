@@ -1,0 +1,29 @@
+{
+  "examples": {
+    "400_BadRequest_MissingFields": {
+      "errors": {
+        "orderId": ["OrderId é obrigatório"],
+        "orderSnapshot": ["OrderSnapshot é obrigatório"]
+      },
+      "message": "Dados inválidos"
+    },
+    "400_BadRequest_InvalidOrderSnapshot": {
+      "message": "OrderSnapshot contém dados inválidos: Items: Items deve conter pelo menos um item.; TotalPrice: TotalPrice deve ser maior ou igual a zero."
+    },
+    "400_BadRequest_OrderIdMismatch": {
+      "message": "OrderId do OrderSnapshot (3fa85f64-5717-4562-b3fc-2c963f66afb0) não corresponde ao OrderId informado (3fa85f64-5717-4562-b3fc-2c963f66afa6)."
+    },
+    "400_BadRequest_InvalidJSON": {
+      "message": "OrderSnapshot contém JSON inválido: The JSON value could not be converted to System.Guid. Path: $.orderId, line 1, position 15."
+    },
+    "409_Conflict_AlreadyExists": {
+      "message": "Preparação já existe para este pedido",
+      "preparationId": "3fa85f64-5717-4562-b3fc-2c963f66afaa",
+      "orderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    },
+    "500_InternalServerError": {
+      "message": "Erro interno do servidor.",
+      "error": "Detalhes do erro (apenas em ambiente de desenvolvimento)"
+    }
+  }
+}

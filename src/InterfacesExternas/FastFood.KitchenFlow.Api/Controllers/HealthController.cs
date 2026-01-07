@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FastFood.KitchenFlow.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class HealthController : ControllerBase
 {
     [HttpGet]

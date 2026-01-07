@@ -41,3 +41,5 @@ Usando este contexto, quebre esta história em subtasks detalhadas, seguindo o m
 - O que implementar.
 - Em quais arquivos/pastas focar.
 - Como validar/testar que a subtask está pronta.
+
+**REGRA OBRIGATÓRIA**: Ao criar uma story, TODAS as subtasks listadas na seção "Subtasks" do `story.md` devem ser criadas imediatamente como arquivos `.md` na pasta `subtask/`. Não é permitido criar uma story sem criar todas as subtasks correspondentes.

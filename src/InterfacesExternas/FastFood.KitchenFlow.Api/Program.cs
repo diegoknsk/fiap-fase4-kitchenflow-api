@@ -1,3 +1,15 @@
+using FastFood.KitchenFlow.Application.Ports;
+using FastFood.KitchenFlow.Application.UseCases.DeliveryManagement;
+using FastFood.KitchenFlow.Application.UseCases.PreparationManagement;
+using FastFood.KitchenFlow.Infra.Auth;
+using FastFood.KitchenFlow.Infra.Persistence;
+using FastFood.KitchenFlow.Infra.Persistence.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+
+// Configurar JWT Security Token Handler
+JwtAuthenticationConfig.ConfigureJwtSecurityTokenHandler();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +17,57 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure JWT options (se Customer JWT for necessário)
+builder.Services.Configure<JwtOptions>("Customer", builder.Configuration.GetSection("JwtCustomer"));
+
+// Configure authentication
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddCustomerJwtBearer(builder.Configuration)
+    .AddCognitoJwtBearer(builder.Configuration);
+
+// Configure authorization policies
+builder.Services.AddAuthorizationPolicies();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:5010",
+                "https://localhost:5011",
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:4200"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
+// Configure DbContext
+builder.Services.AddDbContext<KitchenFlowDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure Dependency Injection
+builder.Services.AddScoped<IPreparationRepository, PreparationRepository>();
+builder.Services.AddScoped<CreatePreparationUseCase>();
+builder.Services.AddScoped<GetPreparationsUseCase>();
+builder.Services.AddScoped<StartPreparationUseCase>();
+builder.Services.AddScoped<FinishPreparationUseCase>();
+
+// Delivery
+builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
+builder.Services.AddScoped<CreateDeliveryUseCase>();
+builder.Services.AddScoped<GetReadyDeliveriesUseCase>();
+builder.Services.AddScoped<FinalizeDeliveryUseCase>();
 
 var app = builder.Build();
 
@@ -17,6 +80,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
