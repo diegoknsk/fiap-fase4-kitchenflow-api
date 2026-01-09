@@ -225,9 +225,17 @@ O KitchenFlow mantém um rigoroso processo de garantia de qualidade através de 
 - 🛠️ **Maintainability Rating**: A (18 code smells)
 - 📝 **Duplicação de Código**: 0.0%
 
-![Evidência de Qualidade e Cobertura de Testes](docs/evidencia qualidade teste cobertra.png)
+### Status de Qualidade
 
-*A imagem acima mostra o dashboard do SonarCloud com todas as métricas de qualidade, destacando a cobertura de testes de 95.0% e o Quality Gate aprovado.*
+![Evidência de Qualidade SonarCloud](docs/evidencia qualidade teste cobertra.png)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=diegoknsk_fiap-fase4-kitchenflow-api&metric=alert_status)](https://sonarcloud.io/project/overview?id=diegoknsk_fiap-fase4-kitchenflow-api)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diegoknsk_fiap-fase4-kitchenflow-api&metric=coverage)](https://sonarcloud.io/project/overview?id=diegoknsk_fiap-fase4-kitchenflow-api)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=diegoknsk_fiap-fase4-kitchenflow-api&metric=security_rating)](https://sonarcloud.io/project/overview?id=diegoknsk_fiap-fase4-kitchenflow-api)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=diegoknsk_fiap-fase4-kitchenflow-api&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=diegoknsk_fiap-fase4-kitchenflow-api)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=diegoknsk_fiap-fase4-kitchenflow-api&metric=sqale_rating)](https://sonarcloud.io/project/overview?id=diegoknsk_fiap-fase4-kitchenflow-api)
+
+**Dashboard Completo**: [Visualizar no SonarCloud](https://sonarcloud.io/project/overview?id=diegoknsk_fiap-fase4-kitchenflow-api)
 
 #### Tipos de Testes Implementados
 
