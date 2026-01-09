@@ -82,8 +82,25 @@ public class DeliveryRepository : IDeliveryRepository
     /// <inheritdoc />
     public async Task UpdateAsync(Delivery delivery)
     {
-        var entity = ToEntity(delivery);
-        _context.Deliveries.Update(entity);
+        // Verificar se a entidade já está sendo rastreada pelo contexto
+        var trackedEntity = await _context.Deliveries.FindAsync(delivery.Id);
+        
+        if (trackedEntity != null)
+        {
+            // Se já está rastreada, atualizar as propriedades diretamente
+            trackedEntity.PreparationId = delivery.PreparationId;
+            trackedEntity.OrderId = delivery.OrderId;
+            trackedEntity.Status = (int)delivery.Status;
+            trackedEntity.CreatedAt = delivery.CreatedAt;
+            trackedEntity.FinalizedAt = delivery.FinalizedAt;
+        }
+        else
+        {
+            // Se não está rastreada, criar nova entidade e usar Update
+            var entity = ToEntity(delivery);
+            _context.Deliveries.Update(entity);
+        }
+        
         await _context.SaveChangesAsync();
     }
 
